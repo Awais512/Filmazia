@@ -1,0 +1,4 @@
+node_modules
+.ai/
+.claude/
+.env.local
