@@ -1,8 +1,0 @@
-{
-  "/tv/page": "app/tv/page.js",
-  "/favorites/page": "app/favorites/page.js",
-  "/page": "app/page.js",
-  "/tv/[id]/page": "app/tv/[id]/page.js",
-  "/movies/page": "app/movies/page.js",
-  "/watchlist/page": "app/watchlist/page.js"
-}
