@@ -10,6 +10,7 @@ import { tmdb } from '@/lib/tmdb-api';
 import { useWatchlistStore, useFavoritesStore } from '@/store';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
+import { VideoModal } from '@/components/ui/video-modal';
 
 interface TVShowHeroProps {
   show: TVShowDetails;
@@ -17,6 +18,7 @@ interface TVShowHeroProps {
 
 export default function TVShowHero({ show }: TVShowHeroProps) {
   const [showActions, setShowActions] = useState(false);
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
   const backdropUrl = tmdb.getImageUrl(show.backdrop_path, 'backdrop', 'large');
   const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', 'large');
 
@@ -44,12 +46,6 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
       removeFromFavorites(show.id);
     } else {
       addToFavorites(show, 'tv');
-    }
-  };
-
-  const handleWatchTrailer = () => {
-    if (trailer) {
-      window.open(`https://www.youtube.com/watch?v=${trailer.key}`, '_blank');
     }
   };
 
@@ -154,7 +150,7 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
                 <Button
                   size="lg"
                   className="gap-2"
-                  onClick={handleWatchTrailer}
+                  onClick={() => setShowTrailerModal(true)}
                   disabled={!trailer}
                 >
                   <Play className="w-5 h-5 fill-current" />
@@ -201,6 +197,16 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
           </motion.div>
         </div>
       </div>
+
+      {/* Trailer Modal */}
+      {trailer && (
+        <VideoModal
+          isOpen={showTrailerModal}
+          onClose={() => setShowTrailerModal(false)}
+          videoKey={trailer.key}
+          title={show.name}
+        />
+      )}
     </section>
   );
 }

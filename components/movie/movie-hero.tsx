@@ -4,18 +4,20 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Play, Plus, Heart, Star, Clock, Calendar } from 'lucide-react';
+import { Play, Plus, Heart, Star, Clock, Calendar, Check } from 'lucide-react';
 import { MovieDetails } from '@/lib/tmdb-types';
 import { tmdb } from '@/lib/tmdb-api';
 import { useWatchlistStore, useFavoritesStore } from '@/store';
 import { formatRuntime, formatDate, getYear } from '@/lib/utils';
 import { Button } from '@/components/ui';
+import { VideoModal } from '@/components/ui/video-modal';
 
 interface MovieHeroProps {
   movie: MovieDetails;
 }
 
 export default function MovieHero({ movie }: MovieHeroProps) {
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
   const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore();
   const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore();
 
@@ -25,6 +27,11 @@ export default function MovieHero({ movie }: MovieHeroProps) {
 
   const director = movie.credits?.crew?.find((person) => person.job === 'Director');
   const cast = movie.credits?.cast?.slice(0, 4);
+
+  // Find trailer video
+  const trailer = movie.videos?.results.find(
+    (v) => v.site === 'YouTube' && v.type === 'Trailer'
+  );
 
   return (
     <div className="relative min-h-[70vh] w-full">
@@ -191,9 +198,14 @@ export default function MovieHero({ movie }: MovieHeroProps) {
               transition={{ delay: 0.7 }}
               className="flex flex-wrap gap-4 pt-4"
             >
-              <Button size="lg" className="gap-2">
+              <Button
+                size="lg"
+                className="gap-2"
+                onClick={() => setShowTrailerModal(true)}
+                disabled={!trailer}
+              >
                 <Play className="w-5 h-5" />
-                Watch Trailer
+                {trailer ? 'Watch Trailer' : 'No Trailer'}
               </Button>
               <Button
                 variant={inWatchlist ? 'primary' : 'outline'}
@@ -201,7 +213,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
                 onClick={() => (inWatchlist ? removeFromWatchlist(movie.id) : addToWatchlist(movie, 'movie'))}
                 className="gap-2"
               >
-                <Plus className="w-5 h-5" />
+                {inWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                 {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
               </Button>
               <Button
@@ -217,6 +229,16 @@ export default function MovieHero({ movie }: MovieHeroProps) {
           </div>
         </div>
       </div>
+
+      {/* Trailer Modal */}
+      {trailer && (
+        <VideoModal
+          isOpen={showTrailerModal}
+          onClose={() => setShowTrailerModal(false)}
+          videoKey={trailer.key}
+          title={movie.title}
+        />
+      )}
     </div>
   );
 }
