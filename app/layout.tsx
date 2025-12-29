@@ -1,27 +1,28 @@
-import type { Metadata } from 'next';
-import { Playfair_Display, Space_Grotesk } from 'next/font/google';
-import './globals.css';
-import { Header } from '@/shared/layout';
-import { Footer } from '@/shared/layout';
-import { MobileNav } from '@/shared/layout';
-import { AuthProvider } from '@/features/auth';
+import type { Metadata } from "next";
+import { Playfair_Display, Space_Grotesk } from "next/font/google";
+import "./globals.css";
+import { Header } from "@/shared/layout";
+import { Footer } from "@/shared/layout";
+import { MobileNav } from "@/shared/layout";
+import { AuthProvider } from "@/features/auth";
 
 const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap',
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
 });
 
 const space = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space',
-  display: 'swap',
+  subsets: ["latin"],
+  variable: "--font-space",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: 'Filmazia | Movie Tracker',
-  description: 'Track your favorite movies, build your watchlist, and discover new films with Filmazia.',
-  keywords: ['movies', 'tracker', 'watchlist', 'film', 'cinema'],
+  title: "Filmazia | Movie Tracker",
+  description:
+    "Track your favorite movies, build your watchlist, Watch Trailers and discover new films with Filmazia.",
+  keywords: ["movies", "tracker", "watchlist", "film", "cinema"],
 };
 
 export default function RootLayout({
