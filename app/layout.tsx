@@ -4,6 +4,7 @@ import './globals.css';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import MobileNav from '@/components/layout/mobile-nav';
+import { AuthProvider } from '@/components/auth-provider';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -32,12 +33,14 @@ export default function RootLayout({
     <html lang="en" className={`${playfair.variable} ${space.variable}`}>
       <body className="font-body bg-cinematic-black text-white min-h-screen">
         <div className="grain-overlay" />
-        <Header />
-        <main className="pt-16 pb-20 md:pb-0 md:pt-20 min-h-[calc(100vh-64px)]">
-          {children}
-        </main>
-        <Footer />
-        <MobileNav />
+        <AuthProvider>
+          <Header />
+          <main className="pt-16 pb-20 md:pb-0 md:pt-20 min-h-[calc(100vh-64px)]">
+            {children}
+          </main>
+          <Footer />
+          <MobileNav />
+        </AuthProvider>
       </body>
     </html>
   );

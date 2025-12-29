@@ -3,12 +3,15 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, Film } from 'lucide-react';
+import { Search, Menu, X, Film, User, LogOut, Settings } from 'lucide-react';
 import { useUIStore } from '@/store';
+import { useAuth } from '@/components/auth-provider';
 import SearchBar from '@/components/search/search-bar';
 
 export default function Header() {
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
+  const { user, signOut } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -16,7 +19,6 @@ export default function Header() {
     { href: '/tv', label: 'TV Shows' },
     { href: '/watchlist', label: 'Watchlist' },
     { href: '/favorites', label: 'Favorites' },
-    { href: '/profile', label: 'Profile' },
   ];
 
   return (
@@ -45,9 +47,77 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Search & Mobile Menu */}
+          {/* Search & Auth */}
           <div className="flex items-center gap-4">
             <SearchBar />
+
+            {user ? (
+              /* User Menu */
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 p-2 text-gray-300 hover:text-accent-amber transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-cinematic-gray flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-2 w-48 bg-cinematic-dark border border-cinematic-gray rounded-xl shadow-xl overflow-hidden"
+                    >
+                      <div className="px-4 py-3 border-b border-cinematic-gray">
+                        <p className="text-sm text-white font-medium truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                      <div className="py-1">
+                        <Link
+                          href="/profile"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          Profile
+                        </Link>
+                        <Link
+                          href="/settings"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray transition-colors"
+                        >
+                          <Settings className="w-4 h-4" />
+                          Settings
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            signOut();
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-300 hover:text-red-400 hover:bg-cinematic-gray transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              /* Sign In Button */
+              <Link
+                href="/auth/sign-in"
+                className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-accent-amber hover:bg-accent-amber/80 rounded-lg transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
+
             <button
               onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 text-gray-300 hover:text-accent-amber transition-colors"
@@ -79,6 +149,15 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              {!user && (
+                <Link
+                  href="/auth/sign-in"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-3 text-center text-white bg-accent-amber hover:bg-accent-amber/80 rounded-lg transition-colors"
+                >
+                  Sign In
+                </Link>
+              )}
             </nav>
           </motion.div>
         )}
