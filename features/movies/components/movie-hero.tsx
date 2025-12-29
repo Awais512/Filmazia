@@ -227,7 +227,13 @@ export default function MovieHero({ movie }: MovieHeroProps) {
               <Button
                 size="lg"
                 className="gap-2"
-                onClick={() => setShowTrailerModal(true)}
+                onClick={() => {
+                  if (!user) {
+                    window.location.href = '/auth/sign-in';
+                    return;
+                  }
+                  setShowTrailerModal(true);
+                }}
                 disabled={!trailer}
               >
                 <Play className="w-5 h-5" />
