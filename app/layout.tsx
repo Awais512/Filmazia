@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, Space_Grotesk } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/layout/header';
-import Footer from '@/components/layout/footer';
-import MobileNav from '@/components/layout/mobile-nav';
-import { AuthProvider } from '@/components/auth-provider';
+import { Header } from '@/shared/layout';
+import { Footer } from '@/shared/layout';
+import { MobileNav } from '@/shared/layout';
+import { AuthProvider } from '@/features/auth';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],

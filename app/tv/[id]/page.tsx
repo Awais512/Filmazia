@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { TVShowHero, TVShowOverview, TVShowCast, TVShowRecommendations, TVShowInfo } from '@/components/tv';
-import { tmdb } from '@/lib/tmdb-api';
+import { TVShowHero, TVShowOverview, TVShowCast, TVShowRecommendations, TVShowInfo } from '@/features/tv';
+import { tmdb } from '@/shared/tmdb/api';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,4 +1,4 @@
-import { MovieGridSkeleton } from '@/components/ui';
+import { MovieGridSkeleton } from '@/shared/ui';
 
 export default function Loading() {
   return (

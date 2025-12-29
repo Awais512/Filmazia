@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, ArrowRight, Mail, Lock, User, Check } from 'lucide-react';
-import { useAuth } from '@/components/auth-provider';
-import { Button } from '@/components/ui';
+import { useAuth } from '@/features/auth';
+import { Button } from '@/shared/ui';
 
 interface SignUpForm {
   name: string;

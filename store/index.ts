@@ -1,4 +1,7 @@
-export { useWatchlistStore } from './watchlist-store';
-export { useFavoritesStore } from './favorites-store';
-export { useRatingsStore } from './ratings-store';
+// Re-export stores from features for backward compatibility
+export { useWatchlistStore } from '@/features/watchlist';
+export { useFavoritesStore } from '@/features/favorites';
+export { useRatingsStore } from '@/features/ratings';
+
+// UI Store remains in root as it's shared across features
 export { useUIStore } from './ui-store';

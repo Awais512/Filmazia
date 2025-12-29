@@ -1,4 +1,4 @@
-import { FavoritesClient } from '@/components/pages/favorites-client';
+import { FavoritesClient } from '@/features/favorites';
 
 export default function FavoritesPage() {
   return <FavoritesClient />;

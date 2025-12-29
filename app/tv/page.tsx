@@ -1,4 +1,4 @@
-import { TVClient } from '@/components/pages/tv-client';
+import { TVClient } from '@/features/tv';
 import { getTVShows, getTVGenres, getTVProviders } from '../actions';
 
 interface TVPageProps {

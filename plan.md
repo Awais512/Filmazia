@@ -879,3 +879,571 @@ export function PageClient({ initialData, initialFilters }) {
 - [ ] Check bundle size reduction
 - [ ] Test error handling
 - [ ] Verify localStorage features still work
+
+---
+
+# Feature-Based Architecture Refactoring
+
+## Overview
+
+Refactor the Filmazia application from a traditional folder-based structure (`components/`, `lib/`, `store/`) to a **feature-based architecture** where each feature contains all its related code (components, hooks, types, utils, actions, stores).
+
+---
+
+## Current Structure
+
+```
+filmazia/
+├── app/
+│   ├── actions.ts (all server actions)
+│   ├── movies/page.tsx
+│   ├── tv/page.tsx
+│   ├── search/page.tsx
+│   ├── watchlist/page.tsx
+│   ├── favorites/page.tsx
+│   ├── profile/page.tsx
+│   └── auth/
+├── components/
+│   ├── movie/ (shared components)
+│   ├── tv/ (shared components)
+│   ├── home/ (home sections)
+│   ├── layout/
+│   ├── ui/ (reusable ui)
+│   ├── pages/ (client components)
+│   ├── search/
+│   └── rating/
+├── lib/
+│   ├── tmdb-api.ts
+│   ├── tmdb-types.ts
+│   ├── constants.ts
+│   ├── utils.ts
+│   └── supabase/
+└── store/
+    ├── watchlist-store.ts
+    ├── favorites-store.ts
+    ├── ratings-store.ts
+    └── ui-store.ts
+```
+
+---
+
+## Target Structure
+
+```
+filmazia/
+├── features/
+│   ├── auth/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── actions/
+│   │   └── index.ts
+│   ├── movies/
+│   │   ├── components/
+│   │   │   ├── movie-card-poster.tsx
+│   │   │   ├── movie-hero.tsx
+│   │   │   ├── movie-info.tsx
+│   │   │   ├── movie-cast.tsx
+│   │   │   ├── movie-overview.tsx
+│   │   │   ├── movie-recommendations.tsx
+│   │   │   ├── movie-actions-menu.tsx
+│   │   │   ├── movie-rating-badge.tsx
+│   │   │   └── movies-page-client.tsx
+│   │   ├── hooks/
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── actions/
+│   │   │   └── index.ts (server actions)
+│   │   └── index.ts
+│   ├── tv/
+│   │   ├── components/
+│   │   │   ├── tvshow-card-poster.tsx
+│   │   │   ├── tvshow-hero.tsx
+│   │   │   ├── tvshow-info.tsx
+│   │   │   ├── tvshow-cast.tsx
+│   │   │   ├── tvshow-overview.tsx
+│   │   │   ├── tvshow-recommendations.tsx
+│   │   │   └── tv-page-client.tsx
+│   │   ├── hooks/
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── actions/
+│   │   └── index.ts
+│   ├── search/
+│   │   ├── components/
+│   │   │   ├── search-bar.tsx
+│   │   │   └── search-page-client.tsx
+│   │   ├── hooks/
+│   │   │   └── use-search-debounce.ts
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── actions/
+│   │   └── index.ts
+│   ├── watchlist/
+│   │   ├── components/
+│   │   │   └── watchlist-page-client.tsx
+│   │   ├── hooks/
+│   │   │   └── use-hydrated-watchlist.ts
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── store/
+│   │   │   └── watchlist-store.ts
+│   │   └── index.ts
+│   ├── favorites/
+│   │   ├── components/
+│   │   │   └── favorites-page-client.tsx
+│   │   ├── hooks/
+│   │   │   └── use-hydrated-favorites.ts
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── store/
+│   │   │   └── favorites-store.ts
+│   │   └── index.ts
+│   ├── ratings/
+│   │   ├── components/
+│   │   │   ├── star-rating.tsx
+│   │   │   └── rating-modal.tsx
+│   │   ├── hooks/
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── store/
+│   │   │   └── ratings-store.ts
+│   │   └── index.ts
+│   ├── profile/
+│   │   ├── components/
+│   │   │   └── profile-page-client.tsx
+│   │   ├── hooks/
+│   │   │   └── use-profile-stats.ts
+│   │   ├── types/
+│   │   ├── utils/
+│   │   └── index.ts
+│   └── home/
+│       ├── components/
+│       │   ├── hero-carousel.tsx
+│       │   ├── trending-section.tsx
+│       │   ├── popular-section.tsx
+│       │   ├── upcoming-section.tsx
+│       │   ├── trending-tv-section.tsx
+│       │   └── popular-tv-section.tsx
+│       ├── hooks/
+│       ├── types/
+│       └── index.ts
+├── shared/
+│   ├── ui/
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   ├── select.tsx
+│   │   ├── modal.tsx
+│   │   ├── pagination.tsx
+│   │   ├── skeleton.tsx
+│   │   ├── empty-state.tsx
+│   │   ├── error-message.tsx
+│   │   ├── video-modal.tsx
+│   │   └── index.ts
+│   ├── layout/
+│   │   ├── header.tsx
+│   │   ├── footer.tsx
+│   │   ├── mobile-nav.tsx
+│   │   └── index.ts
+│   ├── tmdb/
+│   │   ├── api.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── config/
+│   │   ├── constants.ts
+│   │   └── index.ts
+│   └── utils/
+│       └── index.ts
+└── app/ (routes only, minimal logic)
+```
+
+---
+
+## Feature Breakdown
+
+### 1. Auth Feature
+**Route:** `app/auth/`
+**Source Files:** `lib/supabase/`, `components/auth-provider.tsx`
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | AuthProvider component |
+| `hooks/` | useAuth, useUser |
+| `types/` | User, Session types |
+| `utils/` | Supabase client, auth helpers |
+| `actions/` | signIn, signOut, signUp server actions |
+
+### 2. Movies Feature
+**Route:** `app/movies/`
+**Source Files:** `components/movie/`, `app/actions.ts` (movie actions), `store/ratings-store.ts`
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | MovieCardPoster, MovieHero, MovieInfo, MovieCast, MovieOverview, MovieRecommendations, MovieActions, MoviesPageClient |
+| `hooks/` | useMovie, useMovies, useMovieFilters |
+| `types/` | Movie-specific type extensions |
+| `utils/` | Movie-related utilities |
+| `actions/` | getMovies, getMovieDetails, getTrendingMovies, getPopularMovies, getUpcomingMovies, getMovieGenres, getMovieProviders, getMoviesByIds |
+
+### 3. TV Feature
+**Route:** `app/tv/`
+**Source Files:** `components/tv/`, `app/actions.ts` (TV actions)
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | TVShowCardPoster, TVShowHero, TVShowInfo, TVShowCast, TVShowOverview, TVShowRecommendations, TVPageClient |
+| `hooks/` | useTVShow, useTVShows, useTVFilters |
+| `types/` | TV-specific type extensions |
+| `utils/` | TV-related utilities |
+| `actions/` | getTVShows, getTVShowDetails, getTrendingTVShows, getPopularTVShows, getTVGenres, getTVProviders, getTVShowsByIds |
+
+### 4. Search Feature
+**Route:** `app/search/`
+**Source Files:** `components/search/`, `app/actions.ts` (search actions)
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | SearchBar, SearchPageClient |
+| `hooks/` | useSearch, useSearchDebounce |
+| `types/` | Search filters, results types |
+| `utils/` | Search utilities |
+| `actions/` | searchContent (movies + TV) |
+
+### 5. Watchlist Feature
+**Route:** `app/watchlist/`
+**Source Files:** `components/pages/watchlist-client.tsx`, `store/watchlist-store.ts`
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | WatchlistPageClient |
+| `hooks/` | useWatchlist, useHydratedWatchlist |
+| `types/` | WatchlistItem types |
+| `utils/` | Watchlist utilities |
+| `store/` | WatchlistStore (Zustand) |
+
+### 6. Favorites Feature
+**Route:** `app/favorites/`
+**Source Files:** `components/pages/favorites-client.tsx`, `store/favorites-store.ts`
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | FavoritesPageClient, FolderManager |
+| `hooks/` | useFavorites, useHydratedFavorites |
+| `types/` | FavoriteItem, Folder types |
+| `utils/` | Favorites utilities |
+| `store/` | FavoritesStore (Zustand) |
+
+### 7. Ratings Feature
+**Source Files:** `components/rating/`, `store/ratings-store.ts`
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | StarRating, RatingModal |
+| `hooks/` | useRatings, useMovieRating |
+| `types/` | Rating types |
+| `utils/` | Rating utilities |
+| `store/` | RatingsStore (Zustand) |
+
+### 8. Profile Feature
+**Route:** `app/profile/`
+**Source Files:** `app/profile/page.tsx`, store aggregations
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | ProfilePageClient |
+| `hooks/` | useProfileStats, useExportData |
+| `types/` | Profile stats types |
+| `utils/` | Export utilities |
+
+### 9. Home Feature
+**Route:** `app/page.tsx`
+**Source Files:** `components/home/`
+
+| Subfolder | Contents |
+|-----------|----------|
+| `components/` | HeroCarousel, TrendingSection, PopularSection, UpcomingSection, TrendingTVSection, PopularTVSection |
+| `hooks/` | useTrending, usePopular |
+| `types/` | Home section types |
+
+### 10. Shared Layer
+**Purpose:** Reusable code across features
+
+| Subfolder | Contents |
+|-----------|----------|
+| `ui/` | All reusable UI components (Button, Input, Select, Modal, Pagination, Skeleton, EmptyState, ErrorMessage, VideoModal) |
+| `layout/` | Header, Footer, MobileNav |
+| `tmdb/` | API client, types (moved from lib/) |
+| `config/` | Constants (moved from lib/) |
+| `utils/` | General utilities (cn function, etc.) |
+
+---
+
+## Implementation Phases
+
+### Phase 1: Setup Shared Layer
+**Goal:** Create foundation for features to depend on
+
+1. Create `shared/` directory structure
+2. Move `components/ui/*` → `shared/ui/`
+3. Move `components/layout/*` → `shared/layout/`
+4. Move `lib/tmdb-api.ts` → `shared/tmdb/api.ts`
+5. Move `lib/tmdb-types.ts` → `shared/tmdb/types.ts`
+6. Move `lib/constants.ts` → `shared/config/constants.ts`
+7. Move `lib/utils.ts` → `shared/utils/index.ts`
+8. Create barrel exports (index.ts) for each shared folder
+
+### Phase 2: Auth Feature
+1. Create `features/auth/` structure
+2. Move auth-related files from `lib/supabase/` and `components/auth-provider.tsx`
+3. Create `features/auth/index.ts` with exports
+
+### Phase 3: Movies Feature
+1. Create `features/movies/` structure
+2. Move all `components/movie/*` except TVShowCardPoster
+3. Extract movie actions from `app/actions.ts` → `features/movies/actions/`
+4. Create `features/movies/index.ts` with exports
+5. Update imports in `app/movies/page.tsx`
+
+### Phase 4: TV Feature
+1. Create `features/tv/` structure
+2. Move all `components/tv/*`
+3. Move `components/movie/tvshow-card-poster.tsx` → `features/tv/components/`
+4. Extract TV actions from `app/actions.ts` → `features/tv/actions/`
+5. Create `features/tv/index.ts` with exports
+6. Update imports in `app/tv/page.tsx`
+
+### Phase 5: Search Feature
+1. Create `features/search/` structure
+2. Move `components/search/*`
+3. Move `components/pages/search-client.tsx` → `features/search/components/`
+4. Extract search actions from `app/actions.ts` → `features/search/actions/`
+5. Create debounce hook → `features/search/hooks/use-search-debounce.ts`
+6. Update imports in `app/search/page.tsx`
+
+### Phase 6: Watchlist Feature
+1. Create `features/watchlist/` structure
+2. Move `components/pages/watchlist-client.tsx` → `features/watchlist/components/`
+3. Move `store/watchlist-store.ts` → `features/watchlist/store/`
+4. Extract hydration hook → `features/watchlist/hooks/use-hydrated-watchlist.ts`
+5. Update imports in `app/watchlist/page.tsx`
+
+### Phase 7: Favorites Feature
+1. Create `features/favorites/` structure
+2. Move `components/pages/favorites-client.tsx` → `features/favorites/components/`
+3. Move `store/favorites-store.ts` → `features/favorites/store/`
+4. Extract hydration hook → `features/favorites/hooks/use-hydrated-favorites.ts`
+5. Update imports in `app/favorites/page.tsx`
+
+### Phase 8: Ratings Feature
+1. Create `features/ratings/` structure
+2. Move `components/rating/*`
+3. Move `store/ratings-store.ts` → `features/ratings/store/`
+4. Create hooks for rating management
+
+### Phase 9: Profile Feature
+1. Create `features/profile/` structure
+2. Extract profile component from `app/profile/page.tsx`
+3. Create stats hook → `features/profile/hooks/use-profile-stats.ts`
+4. Update imports in `app/profile/page.tsx`
+
+### Phase 10: Home Feature
+1. Create `features/home/` structure
+2. Move `components/home/*`
+3. Create hooks for data fetching
+4. Update imports in `app/page.tsx`
+
+### Phase 11: Update All Imports
+1. Update import paths in all `app/*.tsx` files
+2. Update cross-feature imports within features
+3. Add path aliases to `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"],
+      "@/features/*": ["./features/*"],
+      "@/shared/*": ["./shared/*"]
+    }
+  }
+}
+```
+
+### Phase 12: Cleanup
+1. Delete old empty directories:
+   - `components/movie/`
+   - `components/tv/`
+   - `components/home/`
+   - `components/search/`
+   - `components/rating/`
+   - `components/pages/`
+   - `store/`
+   - `lib/` (check if other files exist first)
+2. Delete `app/actions.ts` (actions now in features)
+3. Run build to verify no broken imports
+4. Test all routes
+
+---
+
+## Import Path Examples
+
+### Before (Current)
+```typescript
+import { MovieCardPoster } from '@/components/movie';
+import { getMovies } from '@/app/actions';
+import { useWatchlistStore } from '@/store';
+```
+
+### After (Refactored)
+```typescript
+import { MovieCardPoster } from '@/features/movies';
+import { getMovies } from '@/features/movies/actions';
+import { useWatchlistStore } from '@/features/watchlist';
+```
+
+### Shared Imports
+```typescript
+import { Button } from '@/shared/ui';
+import { Header } from '@/shared/layout';
+import { tmdb } from '@/shared/tmdb';
+```
+
+---
+
+## tsconfig.json Updates
+
+Add path aliases for cleaner imports:
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"],
+      "@/features/*": ["./features/*"],
+      "@/shared/*": ["./shared/*"],
+      "@/shared/ui/*": ["./shared/ui/*"],
+      "@/shared/layout/*": ["./shared/layout/*"],
+      "@/shared/tmdb/*": ["./shared/tmdb/*"],
+      "@/shared/config/*": ["./shared/config/*"]
+    }
+  }
+}
+```
+
+---
+
+## Barrel Export Pattern
+
+Each feature and shared folder should have an `index.ts` that exports its public API:
+
+**Example: `features/movies/index.ts`**
+```typescript
+// Components
+export { MovieCardPoster } from './components/movie-card-poster';
+export { MovieHero } from './components/movie-hero';
+export { MovieInfo } from './components/movie-info';
+// ... more components
+
+// Actions
+export * from './actions';
+
+// Hooks
+export { useMovie } from './hooks/use-movie';
+// ... more hooks
+
+// Types
+export type { MovieFilters } from './types';
+```
+
+This allows clean imports like:
+```typescript
+import { MovieCardPoster, getMovies, useMovie } from '@/features/movies';
+```
+
+---
+
+## Files to Create Summary
+
+### Directories to Create
+- `features/auth/` + subfolders
+- `features/movies/` + subfolders
+- `features/tv/` + subfolders
+- `features/search/` + subfolders
+- `features/watchlist/` + subfolders
+- `features/favorites/` + subfolders
+- `features/ratings/` + subfolders
+- `features/profile/` + subfolders
+- `features/home/` + subfolders
+- `shared/ui/`
+- `shared/layout/`
+- `shared/tmdb/`
+- `shared/config/`
+- `shared/utils/`
+
+### Files to Move (Summary)
+| From | To |
+|------|-----|
+| `components/ui/*` | `shared/ui/*` |
+| `components/layout/*` | `shared/layout/*` |
+| `lib/tmdb-api.ts` | `shared/tmdb/api.ts` |
+| `lib/tmdb-types.ts` | `shared/tmdb/types.ts` |
+| `lib/constants.ts` | `shared/config/constants.ts` |
+| `lib/utils.ts` | `shared/utils/index.ts` |
+| `components/movie/*` | `features/movies/components/*` |
+| `components/tv/*` | `features/tv/components/*` |
+| `components/home/*` | `features/home/components/*` |
+| `components/search/*` | `features/search/components/*` |
+| `components/rating/*` | `features/ratings/components/*` |
+| `components/pages/*` | Individual feature components/ |
+| `store/watchlist-store.ts` | `features/watchlist/store/` |
+| `store/favorites-store.ts` | `features/favorites/store/` |
+| `store/ratings-store.ts` | `features/ratings/store/` |
+| `store/ui-store.ts` | Keep in root or move to shared |
+
+### Actions to Extract from `app/actions.ts`
+| Action | Destination |
+|--------|-------------|
+| `getMovies`, `getMovieDetails`, `getTrendingMovies`, `getPopularMovies`, `getUpcomingMovies`, `getMovieGenres`, `getMovieProviders`, `getMoviesByIds` | `features/movies/actions/` |
+| `getTVShows`, `getTVShowDetails`, `getTrendingTVShows`, `getPopularTVShows`, `getTVGenres`, `getTVProviders`, `getTVShowsByIds` | `features/tv/actions/` |
+| `searchContent` | `features/search/actions/` |
+| `getWatchlistContent` | `features/watchlist/actions/` |
+| `getFavoritesContent` | `features/favorites/actions/` |
+
+---
+
+## Benefits of Feature-Based Architecture
+
+1. **Co-location:** All code for a feature lives together
+2. **Easier Navigation:** Find related code quickly
+3. **Better Scalability:** Add new features without clutter
+4. **Clearer Boundaries:** Know what belongs where
+5. **Independent Features:** Features can be extracted/moved easily
+6. **Better Onboarding:** New devs understand structure faster
+7. **Easier Testing:** Test features in isolation
+8. **Code Reuse:** Shared layer is explicit
+
+---
+
+## Migration Checklist
+
+- [ ] Create shared directory structure
+- [ ] Move UI components to shared/ui
+- [ ] Move layout components to shared/layout
+- [ ] Move TMDB API to shared/tmdb
+- [ ] Move constants to shared/config
+- [ ] Create auth feature
+- [ ] Create movies feature
+- [ ] Create TV feature
+- [ ] Create search feature
+- [ ] Create watchlist feature
+- [ ] Create favorites feature
+- [ ] Create ratings feature
+- [ ] Create profile feature
+- [ ] Create home feature
+- [ ] Update all import paths
+- [ ] Update tsconfig.json with path aliases
+- [ ] Delete old empty directories
+- [ ] Delete app/actions.ts
+- [ ] Run build - verify no errors
+- [ ] Test all routes manually
+- [ ] Verify all features work correctly

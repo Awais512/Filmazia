@@ -1,4 +1,4 @@
-import { WatchlistClient } from '@/components/pages/watchlist-client';
+import { WatchlistClient } from '@/features/watchlist';
 
 export default function WatchlistPage() {
   return <WatchlistClient />;

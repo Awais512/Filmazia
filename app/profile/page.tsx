@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useWatchlistStore, useFavoritesStore, useRatingsStore } from '@/store';
-import { Button } from '@/components/ui';
+import { Button } from '@/shared/ui';
 import { Star, Bookmark, Heart, Download, Trash2 } from 'lucide-react';
 
 export default function ProfilePage() {

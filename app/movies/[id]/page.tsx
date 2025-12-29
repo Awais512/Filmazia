@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { MovieHero, MovieOverview, MovieCast, MovieRecommendations, MovieInfo } from '@/components/movie';
-import { tmdb } from '@/lib/tmdb-api';
+import { MovieHero, MovieOverview, MovieCast, MovieRecommendations, MovieInfo } from '@/features/movies';
+import { tmdb } from '@/shared/tmdb/api';
 
 export const dynamic = 'force-dynamic';
 

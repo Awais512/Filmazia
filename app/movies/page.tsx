@@ -1,4 +1,4 @@
-import { MoviesClient } from '@/components/pages/movies-client';
+import { MoviesClient } from '@/features/movies';
 import { getMovies, getMovieGenres } from '../actions';
 
 interface MoviesPageProps {

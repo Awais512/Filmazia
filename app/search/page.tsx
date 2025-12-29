@@ -1,4 +1,4 @@
-import { SearchClient } from '@/components/pages/search-client';
+import { SearchClient } from '@/features/search';
 import { searchContent } from '../actions';
 
 interface SearchPageProps {
