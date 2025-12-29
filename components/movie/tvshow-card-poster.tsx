@@ -9,6 +9,7 @@ import { TVShow } from '@/lib/tmdb-types';
 import { tmdb } from '@/lib/tmdb-api';
 import { useWatchlistStore, useFavoritesStore } from '@/store';
 import { cn, getRatingColor } from '@/lib/utils';
+import { useAuth } from '@/components/auth-provider';
 
 interface TVShowCardPosterProps {
   show: TVShow;
@@ -18,6 +19,7 @@ interface TVShowCardPosterProps {
 
 export default function TVShowCardPoster({ show, priority = false, className }: TVShowCardPosterProps) {
   const [imageError, setImageError] = useState(false);
+  const { user } = useAuth();
   const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore();
   const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore();
   const [showActions, setShowActions] = useState(false);
@@ -30,6 +32,10 @@ export default function TVShowCardPoster({ show, priority = false, className }: 
   const handleWatchlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!user) {
+      window.location.href = '/auth/sign-in';
+      return;
+    }
     if (inWatchlist) {
       removeFromWatchlist(show.id);
     } else {
@@ -40,6 +46,10 @@ export default function TVShowCardPoster({ show, priority = false, className }: 
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!user) {
+      window.location.href = '/auth/sign-in';
+      return;
+    }
     if (isFav) {
       removeFromFavorites(show.id);
     } else {

@@ -4,13 +4,13 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Play, Plus, Heart, Bookmark, ChevronDown, Star, Check } from 'lucide-react';
+import { Play, Plus, Heart, ChevronDown, Star, Check } from 'lucide-react';
 import { TVShowDetails } from '@/lib/tmdb-types';
 import { tmdb } from '@/lib/tmdb-api';
 import { useWatchlistStore, useFavoritesStore } from '@/store';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
 import { VideoModal } from '@/components/ui/video-modal';
+import { useAuth } from '@/components/auth-provider';
 
 interface TVShowHeroProps {
   show: TVShowDetails;
@@ -19,6 +19,7 @@ interface TVShowHeroProps {
 export default function TVShowHero({ show }: TVShowHeroProps) {
   const [showActions, setShowActions] = useState(false);
   const [showTrailerModal, setShowTrailerModal] = useState(false);
+  const { user } = useAuth();
   const backdropUrl = tmdb.getImageUrl(show.backdrop_path, 'backdrop', 'large');
   const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', 'large');
 
@@ -34,6 +35,10 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
   );
 
   const handleWatchlist = () => {
+    if (!user) {
+      window.location.href = '/auth/sign-in';
+      return;
+    }
     if (inWatchlist) {
       removeFromWatchlist(show.id);
     } else {
@@ -42,6 +47,10 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
   };
 
   const handleFavorite = () => {
+    if (!user) {
+      window.location.href = '/auth/sign-in';
+      return;
+    }
     if (isFav) {
       removeFromFavorites(show.id);
     } else {

@@ -13,10 +13,13 @@ export default function Header() {
   const { user, signOut } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const navLinks = [
+  const publicNavLinks = [
     { href: '/', label: 'Home' },
     { href: '/movies', label: 'Movies' },
     { href: '/tv', label: 'TV Shows' },
+  ];
+
+  const protectedNavLinks = [
     { href: '/watchlist', label: 'Watchlist' },
     { href: '/favorites', label: 'Favorites' },
   ];
@@ -35,7 +38,17 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
+            {publicNavLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-gray-300 hover:text-accent-amber transition-colors relative group"
+              >
+                {link.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent-amber transition-all group-hover:w-full" />
+              </Link>
+            ))}
+            {user && protectedNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -139,7 +152,17 @@ export default function Header() {
             className="md:hidden bg-cinematic-dark border-t border-cinematic-gray"
           >
             <nav className="flex flex-col p-4 space-y-2">
-              {navLinks.map((link) => (
+              {publicNavLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-3 text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray rounded-lg transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              {user && protectedNavLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

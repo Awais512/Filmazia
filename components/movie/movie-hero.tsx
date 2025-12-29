@@ -11,6 +11,7 @@ import { useWatchlistStore, useFavoritesStore } from '@/store';
 import { formatRuntime, formatDate, getYear } from '@/lib/utils';
 import { Button } from '@/components/ui';
 import { VideoModal } from '@/components/ui/video-modal';
+import { useAuth } from '@/components/auth-provider';
 
 interface MovieHeroProps {
   movie: MovieDetails;
@@ -18,6 +19,7 @@ interface MovieHeroProps {
 
 export default function MovieHero({ movie }: MovieHeroProps) {
   const [showTrailerModal, setShowTrailerModal] = useState(false);
+  const { user } = useAuth();
   const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore();
   const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore();
 
@@ -32,6 +34,30 @@ export default function MovieHero({ movie }: MovieHeroProps) {
   const trailer = movie.videos?.results.find(
     (v) => v.site === 'YouTube' && v.type === 'Trailer'
   );
+
+  const handleWatchlist = () => {
+    if (!user) {
+      window.location.href = '/auth/sign-in';
+      return;
+    }
+    if (inWatchlist) {
+      removeFromWatchlist(movie.id);
+    } else {
+      addToWatchlist(movie, 'movie');
+    }
+  };
+
+  const handleFavorite = () => {
+    if (!user) {
+      window.location.href = '/auth/sign-in';
+      return;
+    }
+    if (isFav) {
+      removeFromFavorites(movie.id);
+    } else {
+      addToFavorites(movie, 'movie');
+    }
+  };
 
   return (
     <div className="relative min-h-[70vh] w-full">
@@ -210,7 +236,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
               <Button
                 variant={inWatchlist ? 'primary' : 'outline'}
                 size="lg"
-                onClick={() => (inWatchlist ? removeFromWatchlist(movie.id) : addToWatchlist(movie, 'movie'))}
+                onClick={handleWatchlist}
                 className="gap-2"
               >
                 {inWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
@@ -219,7 +245,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
               <Button
                 variant={isFav ? 'primary' : 'ghost'}
                 size="lg"
-                onClick={() => (isFav ? removeFromFavorites(movie.id) : addToFavorites(movie, 'movie'))}
+                onClick={handleFavorite}
                 className="gap-2"
               >
                 <Heart className="w-5 h-5" fill={isFav ? 'currentColor' : 'none'} />
