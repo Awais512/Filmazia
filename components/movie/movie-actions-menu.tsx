@@ -27,12 +27,12 @@ export default function MovieActionsMenu({ movie, className }: MovieActionsMenuP
     {
       icon: inWatchlist ? Check : Bookmark,
       label: inWatchlist ? 'In Watchlist' : 'Add to Watchlist',
-      onClick: () => (inWatchlist ? removeFromWatchlist(movie.id) : addToWatchlist(movie)),
+      onClick: () => (inWatchlist ? removeFromWatchlist(movie.id) : addToWatchlist(movie, 'movie')),
     },
     {
       icon: isFav ? Check : Heart,
       label: isFav ? 'In Favorites' : 'Add to Favorites',
-      onClick: () => (isFav ? removeFromFavorites(movie.id) : addToFavorites(movie)),
+      onClick: () => (isFav ? removeFromFavorites(movie.id) : addToFavorites(movie, 'movie')),
     },
     {
       icon: Star,

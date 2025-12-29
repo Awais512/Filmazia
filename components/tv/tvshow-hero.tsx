@@ -4,9 +4,10 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Play, Plus, Heart, Bookmark, ChevronDown, Star } from 'lucide-react';
+import { Play, Plus, Heart, Bookmark, ChevronDown, Star, Check } from 'lucide-react';
 import { TVShowDetails } from '@/lib/tmdb-types';
 import { tmdb } from '@/lib/tmdb-api';
+import { useWatchlistStore, useFavoritesStore } from '@/store';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
 
@@ -18,6 +19,39 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
   const [showActions, setShowActions] = useState(false);
   const backdropUrl = tmdb.getImageUrl(show.backdrop_path, 'backdrop', 'large');
   const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', 'large');
+
+  const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore();
+  const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore();
+
+  const inWatchlist = isInWatchlist(show.id);
+  const isFav = isFavorite(show.id);
+
+  // Find trailer video
+  const trailer = show.videos?.results.find(
+    (v) => v.site === 'YouTube' && v.type === 'Trailer'
+  );
+
+  const handleWatchlist = () => {
+    if (inWatchlist) {
+      removeFromWatchlist(show.id);
+    } else {
+      addToWatchlist(show, 'tv');
+    }
+  };
+
+  const handleFavorite = () => {
+    if (isFav) {
+      removeFromFavorites(show.id);
+    } else {
+      addToFavorites(show, 'tv');
+    }
+  };
+
+  const handleWatchTrailer = () => {
+    if (trailer) {
+      window.open(`https://www.youtube.com/watch?v=${trailer.key}`, '_blank');
+    }
+  };
 
   return (
     <section className="relative min-h-[80vh] flex items-end">
@@ -117,31 +151,34 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
               onMouseLeave={() => setShowActions(false)}
             >
               <div className="flex flex-wrap gap-3">
-                <Button size="lg" className="gap-2">
+                <Button
+                  size="lg"
+                  className="gap-2"
+                  onClick={handleWatchTrailer}
+                  disabled={!trailer}
+                >
                   <Play className="w-5 h-5 fill-current" />
-                  Watch Trailer
+                  {trailer ? 'Watch Trailer' : 'No Trailer'}
                 </Button>
-                <Button variant="outline" size="lg" className="gap-2">
-                  <Plus className="w-5 h-5" />
-                  Add to List
+                <Button
+                  variant={inWatchlist ? 'primary' : 'outline'}
+                  size="lg"
+                  className="gap-2"
+                  onClick={handleWatchlist}
+                >
+                  {inWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                  {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
                 </Button>
-                <Button variant="ghost" size="lg" className="gap-2">
-                  <Heart className="w-5 h-5" />
-                  Favorite
+                <Button
+                  variant={isFav ? 'primary' : 'ghost'}
+                  size="lg"
+                  className="gap-2"
+                  onClick={handleFavorite}
+                >
+                  <Heart className="w-5 h-5" fill={isFav ? 'currentColor' : 'none'} />
+                  {isFav ? 'Favorited' : 'Favorite'}
                 </Button>
               </div>
-
-              {/* Additional actions */}
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: showActions ? 1 : 0, y: showActions ? 0 : -10 }}
-                className="absolute top-full left-0 mt-2 flex gap-2"
-              >
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Bookmark className="w-4 h-4" />
-                  Watchlist
-                </Button>
-              </motion.div>
             </div>
 
             {/* Next Episode */}

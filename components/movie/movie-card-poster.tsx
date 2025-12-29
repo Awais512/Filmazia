@@ -33,7 +33,7 @@ export default function MovieCardPoster({ movie, priority = false, className }: 
     if (inWatchlist) {
       removeFromWatchlist(movie.id);
     } else {
-      addToWatchlist(movie);
+      addToWatchlist(movie, 'movie');
     }
   };
 
@@ -43,7 +43,7 @@ export default function MovieCardPoster({ movie, priority = false, className }: 
     if (isFav) {
       removeFromFavorites(movie.id);
     } else {
-      addToFavorites(movie);
+      addToFavorites(movie, 'movie');
     }
   };
 

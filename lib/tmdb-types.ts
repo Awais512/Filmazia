@@ -129,8 +129,19 @@ export interface SearchResponse {
   total_results: number;
 }
 
+export interface Genre {
+  id: number;
+  name: string;
+}
+
 export interface GenreListResponse {
-  genres: { id: number; name: string }[];
+  genres: Genre[];
+}
+
+export interface Provider {
+  id: number;
+  name: string;
+  logo_path: string | null;
 }
 
 export interface Person {

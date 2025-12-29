@@ -13,7 +13,7 @@ class TMDBClient {
     this.baseUrl = API_URL;
   }
 
-  private async fetch<T>(endpoint: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
+  async fetch<T>(endpoint: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
     const searchParams = new URLSearchParams({
       api_key: this.apiKey,
       ...Object.fromEntries(

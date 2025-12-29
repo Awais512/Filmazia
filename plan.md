@@ -513,3 +513,369 @@ Critical flows to test:
 - **Backgrounds:** Grain texture, gradients, shadows - not solid colors.
 - **Composition:** Asymmetry, overlap, diagonal flow, grid-breaking.
 - **No Template Feel:** Every design choice should be intentional and unique.
+
+---
+
+## Refactoring Plan: Server Components & Server Actions
+
+### Overview
+Convert all `page.tsx` files from client components to server components. Data fetching will be done on the server using Server Actions and passed down to client components for interactivity.
+
+### Current State Analysis
+
+**Already Server Components:**
+- [app/page.tsx](app/page.tsx) - Home (already server component)
+- [app/movies/[id]/page.tsx](app/movies/[id]/page.tsx) - Movie Details (already server component)
+- [app/tv/[id]/page.tsx](app/tv/[id]/page.tsx) - TV Show Details (already server component)
+
+**Need Refactoring (Client Components):**
+- [app/movies/page.tsx](app/movies/page.tsx) - Browse Movies (client-side fetching)
+- [app/tv/page.tsx](app/tv/page.tsx) - Browse TV Shows (client-side fetching)
+- [app/search/page.tsx](app/search/page.tsx) - Search (client-side fetching)
+- [app/watchlist/page.tsx](app/watchlist/page.tsx) - Watchlist (client-side fetching)
+- [app/favorites/page.tsx](app/favorites/page.tsx) - Favorites (client-side fetching)
+- [app/profile/page.tsx](app/profile/page.tsx) - Profile (uses stores only)
+
+---
+
+## Step-by-Step Refactoring Plan
+
+### Phase 1: Create Server Actions Layer
+
+#### Step 1: Create Server Actions File
+**File:** `app/actions.ts`
+
+Create centralized server actions for all data fetching operations:
+
+```typescript
+'use server'
+
+import { tmdb } from '@/lib/tmdb-api'
+import { SearchFilters } from '@/lib/tmdb-types'
+
+// Movies
+export async function getMovies(filters: SearchFilters, page: number)
+export async function getMovieFilters() // Returns genres, years, etc.
+
+// TV Shows
+export async function getTVShows(filters: TVFilters, page: number)
+export async function getTVFilters() // Returns genres, providers, etc.
+
+// Search
+export async function searchContent(query: string, page: number)
+
+// Bulk details fetch (for watchlist/favorites)
+export async function getMoviesByIds(ids: number[])
+export async function getTVShowsByIds(ids: number[])
+```
+
+**Key Benefits:**
+- Single source of truth for server-side data fetching
+- Reusable across multiple pages
+- Easy to add caching and error handling
+- Type-safe with TypeScript
+
+---
+
+### Phase 2: Refactor Browse Pages
+
+#### Step 2: Movies Page Refactoring
+**File:** [app/movies/page.tsx](app/movies/page.tsx)
+
+**Current (Client Component):**
+- `'use client'` directive
+- `useState` for movies, filters, pagination
+- `useEffect` for data fetching
+- Direct TMDB API calls from client
+
+**Target (Server Component):**
+```typescript
+// app/movies/page.tsx (Server Component)
+import { MoviesClient } from './movies-client'
+
+export default async function MoviesPage({
+  searchParams,
+}: {
+  searchParams: { genre?: string; year?: string; sort?: string; page?: string }
+}) {
+  // Parse search params
+  const page = Number(searchParams.page) || 1
+  const filters = {
+    genre: searchParams.genre ? Number(searchParams.genre) : undefined,
+    year: searchParams.year ? Number(searchParams.year) : undefined,
+    sortBy: searchParams.sort || 'popularity.desc',
+  }
+
+  // Fetch data on server
+  const [movies, allGenres] = await Promise.all([
+    getMovies(filters, page),
+    getMovieFilters(),
+  ])
+
+  // Pass to client component for interactivity
+  return <MoviesClient initialMovies={movies} initialFilters={filters} genres={allGenres} />
+}
+```
+
+**New Client Component:**
+```typescript
+// app/movies/movies-client.tsx
+'use client'
+
+export function MoviesClient({ initialMovies, initialFilters, genres }) {
+  // Use URL-based state management instead of useState
+  // Update URL params on filter change (triggers server refetch)
+  // Handle animations, loading states
+}
+```
+
+**Benefits:**
+- Initial page load is faster (server-side rendering)
+- SEO friendly (content available to crawlers)
+- Reduced client-side JavaScript
+- Progressive enhancement (works without JS)
+
+---
+
+#### Step 3: TV Shows Page Refactoring
+**File:** [app/tv/page.tsx](app/tv/page.tsx)
+
+**Same approach as Movies page:**
+- Create server action `getTVShows()`
+- Create `TVFiltersClient` component
+- Use URL search params for state
+- Pass initial data from server
+
+**Key Differences:**
+- TV shows have additional provider filter
+- Fetch TV genres instead of movie genres
+
+---
+
+### Phase 3: Refactor Search Page
+
+#### Step 4: Search Page Refactoring
+**File:** [app/search/page.tsx](app/search/page.tsx)
+
+**Challenge:** Search is inherently interactive
+
+**Solution: Hybrid Approach**
+```typescript
+// app/search/page.tsx (Server Component)
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: { q?: string; page?: string }
+}) {
+  const query = searchParams.q || ''
+  const page = Number(searchParams.page) || 1
+
+  // Only fetch if query exists
+  const initialResults = query ? await searchContent(query, page) : null
+
+  return <SearchClient initialQuery={query} initialResults={initialResults} />
+}
+```
+
+**Client Component:**
+- Handle search input with debounce
+- Update URL on search (pushes to server)
+- Show recent searches from localStorage
+- Display results
+
+---
+
+### Phase 4: Refactor User Data Pages
+
+#### Step 5: Watchlist Page Refactoring
+**File:** [app/watchlist/page.tsx](app/watchlist/page.tsx)
+
+**Challenge:** Watchlist data comes from localStorage (client-side only)
+
+**Solution:**
+```typescript
+// app/watchlist/page.tsx (Server Component - passthrough)
+export default function WatchlistPage() {
+  // Can't fetch on server (localStorage)
+  // Just render client component
+  return <WatchlistClient />
+}
+```
+
+**Optimization for Client Component:**
+- Use server action `getMoviesByIds(ids)` to fetch multiple movies at once
+- Batch fetch requests (reduce N+1 problem)
+- Implement proper loading states
+
+**Server Action:**
+```typescript
+export async function getWatchlistItems(ids: number[]) {
+  const movies = await tmdb.getMoviesByIds(ids)
+  return movies
+}
+```
+
+---
+
+#### Step 6: Favorites Page Refactoring
+**File:** [app/favorites/page.tsx](app/favorites/page.tsx)
+
+**Same approach as Watchlist:**
+- Server component passthrough
+- Client component reads from localStorage
+- Use server action `getMoviesByIds()` for bulk fetching
+- Handle folders (client-side only feature)
+
+---
+
+#### Step 7: Profile Page Refactoring
+**File:** [app/profile/page.tsx](app/profile/page.tsx)
+
+**Simplest case:**
+- All data comes from localStorage stores
+- No server fetching needed
+- Keep as client component (minimal impact)
+- OR make server component that renders client wrapper
+
+```typescript
+// app/profile/page.tsx
+export default function ProfilePage() {
+  return <ProfileClient />
+}
+```
+
+---
+
+### Phase 5: Create Reusable Client Components
+
+#### Step 8: Extract Client Components
+Create shared client components for interactive elements:
+
+**New Files:**
+- `app/movies/movies-client.tsx` - Movies browse interface
+- `app/tv/tv-client.tsx` - TV browse interface
+- `app/search/search-client.tsx` - Search interface
+- `app/watchlist/watchlist-client.tsx` - Watchlist interface
+- `app/favorites/favorites-client.tsx` - Favorites interface
+- `app/profile/profile-client.tsx` - Profile interface
+
+**Shared Pattern:**
+```typescript
+'use client'
+
+import { useSearchParams, useRouter } from 'next/navigation'
+
+export function PageClient({ initialData, initialFilters }) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Update URL instead of useState
+  const updateFilter = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set(key, value)
+    router.push(`?${params.toString()}`)
+  }
+
+  // Handle loading states, animations
+  // Display data from props
+}
+```
+
+---
+
+## Implementation Summary
+
+### Files to Create
+
+| File | Purpose |
+|------|---------|
+| `app/actions.ts` | Server actions for all data fetching |
+| `app/movies/movies-client.tsx` | Movies page client component |
+| `app/tv/tv-client.tsx` | TV page client component |
+| `app/search/search-client.tsx` | Search page client component |
+| `app/watchlist/watchlist-client.tsx` | Watchlist client component |
+| `app/favorites/favorites-client.tsx` | Favorites client component |
+| `app/profile/profile-client.tsx` | Profile client component |
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `app/movies/page.tsx` | Remove 'use client', add server data fetching |
+| `app/tv/page.tsx` | Remove 'use client', add server data fetching |
+| `app/search/page.tsx` | Remove 'use client', add server data fetching |
+| `app/watchlist/page.tsx` | Simplify to passthrough |
+| `app/favorites/page.tsx` | Simplify to passthrough |
+| `app/profile/page.tsx` | Simplify to passthrough |
+
+### Benefits of This Refactoring
+
+1. **Performance:**
+   - Faster initial page loads (server-side rendering)
+   - Reduced client-side JavaScript bundle
+   - Better SEO (content available to crawlers)
+
+2. **User Experience:**
+   - Progressive enhancement (works without JS)
+   - Shareable URLs (filters in search params)
+   - Better caching on server side
+
+3. **Code Quality:**
+   - Clearer separation of concerns
+   - Reusable server actions
+   - Easier to test server logic separately
+
+4. **Scalability:**
+   - Easier to add caching layers
+   - Better for CDN edge caching
+   - Reduced API rate limiting (server can cache)
+
+---
+
+## Migration Checklist
+
+### Server Actions Setup
+- [ ] Create `app/actions.ts` with all data fetching functions
+- [ ] Add error handling and caching to actions
+- [ ] Test actions individually
+
+### Movies Page
+- [ ] Create `MoviesClient` component
+- [ ] Refactor `app/movies/page.tsx` to server component
+- [ ] Implement URL-based filter state
+- [ ] Test pagination and filters
+
+### TV Page
+- [ ] Create `TVClient` component
+- [ ] Refactor `app/tv/page.tsx` to server component
+- [ ] Test provider filter
+- [ ] Verify all filters work
+
+### Search Page
+- [ ] Create `SearchClient` component with debounce
+- [ ] Refactor `app/search/page.tsx` to server component
+- [ ] Test search functionality
+- [ ] Verify recent searches still work
+
+### Watchlist Page
+- [ ] Add `getMoviesByIds` server action
+- [ ] Optimize `WatchlistClient` for bulk fetching
+- [ ] Test hydration and data loading
+- [ ] Verify remove functionality
+
+### Favorites Page
+- [ ] Optimize `FavoritesClient` for bulk fetching
+- [ ] Test folder functionality
+- [ ] Verify folder filtering works
+
+### Profile Page
+- [ ] Create `ProfileClient` wrapper
+- [ ] Verify all store functionality works
+- [ ] Test export functionality
+
+### Final Testing
+- [ ] Test all pages with JavaScript disabled
+- [ ] Verify SEO metadata
+- [ ] Check bundle size reduction
+- [ ] Test error handling
+- [ ] Verify localStorage features still work

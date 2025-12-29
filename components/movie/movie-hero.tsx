@@ -198,7 +198,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
               <Button
                 variant={inWatchlist ? 'primary' : 'outline'}
                 size="lg"
-                onClick={() => (inWatchlist ? removeFromWatchlist(movie.id) : addToWatchlist(movie))}
+                onClick={() => (inWatchlist ? removeFromWatchlist(movie.id) : addToWatchlist(movie, 'movie'))}
                 className="gap-2"
               >
                 <Plus className="w-5 h-5" />
@@ -207,7 +207,7 @@ export default function MovieHero({ movie }: MovieHeroProps) {
               <Button
                 variant={isFav ? 'primary' : 'ghost'}
                 size="lg"
-                onClick={() => (isFav ? removeFromFavorites(movie.id) : addToFavorites(movie))}
+                onClick={() => (isFav ? removeFromFavorites(movie.id) : addToFavorites(movie, 'movie'))}
                 className="gap-2"
               >
                 <Heart className="w-5 h-5" fill={isFav ? 'currentColor' : 'none'} />
