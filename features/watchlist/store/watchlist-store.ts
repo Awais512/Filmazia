@@ -1,7 +1,6 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { Movie, TVShow, WatchlistItem } from '@/shared/tmdb/types';
 import { supabase } from '@/features/auth/utils/supabase-client';
 import {
@@ -42,10 +41,8 @@ const syncIfAuthenticated = async (action: () => Promise<void>) => {
   }
 };
 
-export const useWatchlistStore = create<WatchlistState>()(
-  persist(
-    (set, get) => ({
-      items: {},
+export const useWatchlistStore = create<WatchlistState>()((set, get) => ({
+  items: {},
 
       add: (item, type) => {
         set((state) => ({
@@ -113,39 +110,11 @@ export const useWatchlistStore = create<WatchlistState>()(
         set({ items: {} });
       },
 
-      setFromServer: (items) => {
-        const nextItems: Record<number, WatchlistEntry> = {};
-        for (const item of items) {
-          nextItems[item.id] = item;
-        }
-        set({ items: nextItems });
-      },
-    }),
-    {
-      name: 'filmazia-watchlist',
-      storage: createJSONStorage(() => localStorage),
-      merge: (persistedState, currentState) => {
-        if (persistedState && typeof persistedState === 'object' && 'items' in persistedState) {
-          const typedState = persistedState as { items: Record<number, unknown> };
-          const migratedItems: Record<number, WatchlistEntry> = {};
-          for (const [id, item] of Object.entries(typedState.items)) {
-            const numId = Number(id);
-            const typedItem = item as Record<string, unknown>;
-            // Migrate old data: add type, title, poster_path defaults
-            migratedItems[numId] = {
-              id: numId,
-              addedAt: (typedItem.addedAt as string) || new Date().toISOString(),
-              watched: (typedItem.watched as boolean) || false,
-              watchedAt: typedItem.watchedAt as string | undefined,
-              type: (typedItem.type as 'movie' | 'tv') || 'movie',
-              title: (typedItem.title as string) || (typedItem.name as string) || 'Unknown',
-              poster_path: (typedItem.poster_path as string | null) || null,
-            };
-          }
-          return { ...currentState, items: migratedItems };
-        }
-        return currentState;
-      },
+  setFromServer: (items) => {
+    const nextItems: Record<number, WatchlistEntry> = {};
+    for (const item of items) {
+      nextItems[item.id] = item;
     }
-  )
-);
+    set({ items: nextItems });
+  },
+}));

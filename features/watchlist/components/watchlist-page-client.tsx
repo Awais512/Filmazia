@@ -16,7 +16,7 @@ interface WatchlistClientProps {
 }
 
 export function WatchlistClient({}: WatchlistClientProps) {
-  const { hydrated, store } = useWatchlistStoreHydrated();
+  const store = useWatchlistStore();
   const [items, setItems] = useState<(Movie | TVShow)[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -28,7 +28,6 @@ export function WatchlistClient({}: WatchlistClientProps) {
 
   // Fetch items using optimized server action
   useEffect(() => {
-    if (!hydrated) return;
     if (watchlistItems.length === 0) return;
 
     let cancelled = false;
@@ -74,22 +73,11 @@ export function WatchlistClient({}: WatchlistClientProps) {
     return () => {
       cancelled = true;
     };
-  }, [hydrated, watchlistItems.length, page, sortBy]);
+  }, [watchlistItems.length, page, sortBy]);
 
   const handleRemove = (id: number) => {
     store.remove(id);
   };
-
-  if (!hydrated) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
-        <div className="space-y-8">
-          <div className="h-12 w-48 bg-cinematic-gray rounded animate-pulse" />
-          <MovieGridSkeleton count={ITEMS_PER_PAGE} />
-        </div>
-      </div>
-    );
-  }
 
   if (watchlistItems.length === 0) {
     return (
@@ -180,30 +168,4 @@ export function WatchlistClient({}: WatchlistClientProps) {
       </motion.div>
     </div>
   );
-}
-
-// Hydration hook for watchlist store
-function useWatchlistStoreHydrated() {
-  const [hydrated, setHydrated] = useState(false);
-  const store = useWatchlistStore();
-
-  useEffect(() => {
-    const check = () => {
-      try {
-        const data = localStorage.getItem('filmazia-watchlist');
-        if (data) {
-          JSON.parse(data);
-        }
-        setHydrated(true);
-      } catch (e) {
-        setHydrated(true);
-      }
-    };
-
-    check();
-    const timer = setTimeout(check, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return { hydrated, store };
 }

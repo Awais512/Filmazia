@@ -11,12 +11,8 @@ import { Movie, TVShow } from '@/shared/tmdb/types';
 import { Folder, FolderPlus, Trash2 } from 'lucide-react';
 import { getFavoritesContent } from '@/app/actions';
 
-interface FavoritesClientProps {
-  // Future: could pass initial data from server if we add database support
-}
-
-export function FavoritesClient({}: FavoritesClientProps) {
-  const { hydrated, store } = useFavoritesStoreHydrated();
+export function FavoritesClient() {
+  const store = useFavoritesStore();
   const [items, setItems] = useState<(Movie | TVShow)[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
@@ -29,7 +25,6 @@ export function FavoritesClient({}: FavoritesClientProps) {
 
   // Fetch items using optimized server action
   useEffect(() => {
-    if (!hydrated) return;
     if (favoriteItems.length === 0) return;
 
     let cancelled = false;
@@ -73,7 +68,7 @@ export function FavoritesClient({}: FavoritesClientProps) {
     return () => {
       cancelled = true;
     };
-  }, [hydrated, favoriteItems.length, activeFolder]);
+  }, [favoriteItems.length, activeFolder]);
 
   const handleCreateFolder = () => {
     if (newFolderName.trim()) {
@@ -90,17 +85,6 @@ export function FavoritesClient({}: FavoritesClientProps) {
   const handleDeleteFolder = (folderId: string) => {
     store.deleteFolder(folderId);
   };
-
-  if (!hydrated) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
-        <div className="space-y-8">
-          <div className="h-12 w-48 bg-cinematic-gray rounded animate-pulse" />
-          <MovieGridSkeleton count={10} />
-        </div>
-      </div>
-    );
-  }
 
   if (favoriteItems.length === 0 && allFolders.length === 0) {
     return (
@@ -238,30 +222,4 @@ export function FavoritesClient({}: FavoritesClientProps) {
       </Modal>
     </div>
   );
-}
-
-// Hydration hook for favorites store
-function useFavoritesStoreHydrated() {
-  const [hydrated, setHydrated] = useState(false);
-  const store = useFavoritesStore();
-
-  useEffect(() => {
-    const check = () => {
-      try {
-        const data = localStorage.getItem('filmazia-favorites');
-        if (data) {
-          JSON.parse(data);
-        }
-        setHydrated(true);
-      } catch (e) {
-        setHydrated(true);
-      }
-    };
-
-    check();
-    const timer = setTimeout(check, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return { hydrated, store };
 }

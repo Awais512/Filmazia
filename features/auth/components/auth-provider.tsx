@@ -24,6 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const setFavoritesFromServer = useFavoritesStore((state) => state.setFromServer);
   const setWatchlistFromServer = useWatchlistStore((state) => state.setFromServer);
+  const clearFavorites = useFavoritesStore((state) => state.clear);
+  const clearWatchlist = useWatchlistStore((state) => state.clear);
 
   useEffect(() => {
     const {
@@ -89,6 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
+    clearFavorites();
+    clearWatchlist();
   };
 
   return (
