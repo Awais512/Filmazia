@@ -1,63 +1,68 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Play, Plus, Heart, Star, Clock, Calendar, Check } from 'lucide-react';
-import { MovieDetails } from '@/shared/tmdb/types';
-import { tmdb } from '@/shared/tmdb/api';
-import { useWatchlistStore, useFavoritesStore } from '@/store';
-import { formatRuntime, formatDate, getYear } from '@/shared/utils';
-import { Button } from '@/shared/ui';
-import { VideoModal } from '@/components/ui/video-modal';
-import { useAuth } from '@/features/auth';
+import { useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { Play, Plus, Heart, Star, Clock, Calendar, Check } from 'lucide-react'
+import { MovieDetails } from '@/shared/tmdb/types'
+import { tmdb } from '@/shared/tmdb/api'
+import { useWatchlistStore, useFavoritesStore } from '@/store'
+import { formatRuntime, formatDate, getYear } from '@/shared/utils'
+import { Button } from '@/shared/ui'
+import { VideoModal } from '@/components/ui/video-modal'
+import { User } from '@supabase/supabase-js'
+import { useAuth } from '@/features/auth/components/auth-provider'
 
 interface MovieHeroProps {
-  movie: MovieDetails;
+  movie: MovieDetails
+  user?: User | null
 }
 
-export default function MovieHero({ movie }: MovieHeroProps) {
-  const [showTrailerModal, setShowTrailerModal] = useState(false);
-  const { user } = useAuth();
-  const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore();
-  const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore();
+export default function MovieHero({ movie, user }: MovieHeroProps) {
+  const [showTrailerModal, setShowTrailerModal] = useState(false)
+  const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore()
+  const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore()
+  const { user: authUser, loading: authLoading } = useAuth()
 
-  const inWatchlist = isInWatchlist(movie.id);
-  const isFav = isFavorite(movie.id);
-  const backdropUrl = tmdb.getImageUrl(movie.backdrop_path, 'backdrop', 'large');
+  const inWatchlist = isInWatchlist(movie.id)
+  const isFav = isFavorite(movie.id)
+  const backdropUrl = tmdb.getImageUrl(movie.backdrop_path, 'backdrop', 'large')
+  const currentUser = user ?? authUser
 
-  const director = movie.credits?.crew?.find((person) => person.job === 'Director');
-  const cast = movie.credits?.cast?.slice(0, 4);
+  const director = movie.credits?.crew?.find((person) => person.job === 'Director')
+  const cast = movie.credits?.cast?.slice(0, 4)
 
   // Find trailer video
   const trailer = movie.videos?.results.find(
     (v) => v.site === 'YouTube' && v.type === 'Trailer'
-  );
+  )
 
   const handleWatchlist = () => {
-    if (!user) {
-      window.location.href = '/auth/sign-in';
-      return;
+    if (!currentUser) {
+      if (authLoading) return
+      window.location.href = '/auth/sign-in'
+      return
     }
     if (inWatchlist) {
-      removeFromWatchlist(movie.id);
+      removeFromWatchlist(movie.id)
     } else {
-      addToWatchlist(movie, 'movie');
+      addToWatchlist(movie, 'movie')
     }
-  };
+  }
 
   const handleFavorite = () => {
-    if (!user) {
-      window.location.href = '/auth/sign-in';
-      return;
+    if (!currentUser) {
+      if (authLoading) return
+      window.location.href = '/auth/sign-in'
+      return
     }
     if (isFav) {
-      removeFromFavorites(movie.id);
+      removeFromFavorites(movie.id)
     } else {
-      addToFavorites(movie, 'movie');
+      addToFavorites(movie, 'movie')
     }
-  };
+  }
 
   return (
     <div className="relative min-h-[70vh] w-full">
@@ -229,10 +234,10 @@ export default function MovieHero({ movie }: MovieHeroProps) {
                 className="gap-2"
                 onClick={() => {
                   if (!user) {
-                    window.location.href = '/auth/sign-in';
-                    return;
+                    window.location.href = '/auth/sign-in'
+                    return
                   }
-                  setShowTrailerModal(true);
+                  setShowTrailerModal(true)
                 }}
                 disabled={!trailer}
               >
@@ -272,5 +277,5 @@ export default function MovieHero({ movie }: MovieHeroProps) {
         />
       )}
     </div>
-  );
+  )
 }

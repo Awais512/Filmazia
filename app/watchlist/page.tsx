@@ -1,5 +1,8 @@
-import { WatchlistClient } from '@/features/watchlist';
+import { requireAuth } from '@/features/auth/utils/require-auth'
+import { WatchlistClient } from '@/features/watchlist'
 
-export default function WatchlistPage() {
-  return <WatchlistClient />;
+export default async function WatchlistPage() {
+  await requireAuth()
+
+  return <WatchlistClient />
 }

@@ -4,7 +4,7 @@ import "./globals.css";
 import { Header } from "@/shared/layout";
 import { Footer } from "@/shared/layout";
 import { MobileNav } from "@/shared/layout";
-import { AuthProvider } from "@/features/auth";
+import { AuthProvider } from "@/features/auth/components/auth-provider";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -33,8 +33,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${space.variable}`}>
       <body className="font-body bg-cinematic-black text-white min-h-screen">
-        <div className="grain-overlay" />
         <AuthProvider>
+          <div className="grain-overlay" />
           <Header />
           <main className="pt-16 pb-20 md:pb-0 md:pt-20 min-h-[calc(100vh-64px)]">
             {children}

@@ -1,28 +1,37 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, Film, User, LogOut, Settings } from 'lucide-react';
-import { useUIStore } from '@/store';
-import { useAuth } from '@/components/auth-provider';
-import SearchBar from '@/components/search/search-bar';
+import Link from 'next/link'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Search, Menu, X, Film, User, LogOut, Settings } from 'lucide-react'
+import { useUIStore } from '@/store'
+import { SearchBar } from '@/features/search'
+import { signOutAction } from '@/features/auth/actions'
+import { User as SupabaseUser } from '@supabase/supabase-js'
 
-export default function Header() {
-  const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
-  const { user, signOut } = useAuth();
-  const [showUserMenu, setShowUserMenu] = useState(false);
+interface HeaderClientProps {
+  user: SupabaseUser | null
+}
+
+export function HeaderClient({ user }: HeaderClientProps) {
+  const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore()
+  const [showUserMenu, setShowUserMenu] = useState(false)
 
   const publicNavLinks = [
     { href: '/', label: 'Home' },
     { href: '/movies', label: 'Movies' },
     { href: '/tv', label: 'TV Shows' },
-  ];
+  ]
 
   const protectedNavLinks = [
     { href: '/watchlist', label: 'Watchlist' },
     { href: '/favorites', label: 'Favorites' },
-  ];
+  ]
+
+  const handleSignOut = async () => {
+    setShowUserMenu(false)
+    await signOutAction()
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-cinematic-black/80 backdrop-blur-md border-b border-cinematic-gray">
@@ -107,10 +116,7 @@ export default function Header() {
                           Settings
                         </Link>
                         <button
-                          onClick={() => {
-                            setShowUserMenu(false);
-                            signOut();
-                          }}
+                          onClick={handleSignOut}
                           className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-300 hover:text-red-400 hover:bg-cinematic-gray transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
@@ -186,5 +192,5 @@ export default function Header() {
         )}
       </AnimatePresence>
     </header>
-  );
+  )
 }

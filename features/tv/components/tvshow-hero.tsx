@@ -1,62 +1,67 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Play, Plus, Heart, ChevronDown, Star, Check } from 'lucide-react';
-import { TVShowDetails } from '@/shared/tmdb/types';
-import { tmdb } from '@/shared/tmdb/api';
-import { useWatchlistStore, useFavoritesStore } from '@/store';
-import { Button } from '@/shared/ui';
-import { VideoModal } from '@/components/ui/video-modal';
-import { useAuth } from '@/features/auth';
+import { useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { Play, Plus, Heart, ChevronDown, Star, Check } from 'lucide-react'
+import { TVShowDetails } from '@/shared/tmdb/types'
+import { tmdb } from '@/shared/tmdb/api'
+import { useWatchlistStore, useFavoritesStore } from '@/store'
+import { Button } from '@/shared/ui'
+import { VideoModal } from '@/components/ui/video-modal'
+import { User } from '@supabase/supabase-js'
+import { useAuth } from '@/features/auth/components/auth-provider'
 
 interface TVShowHeroProps {
-  show: TVShowDetails;
+  show: TVShowDetails
+  user?: User | null
 }
 
-export default function TVShowHero({ show }: TVShowHeroProps) {
-  const [showActions, setShowActions] = useState(false);
-  const [showTrailerModal, setShowTrailerModal] = useState(false);
-  const { user } = useAuth();
-  const backdropUrl = tmdb.getImageUrl(show.backdrop_path, 'backdrop', 'large');
-  const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', 'large');
+export default function TVShowHero({ show, user }: TVShowHeroProps) {
+  const [showActions, setShowActions] = useState(false)
+  const [showTrailerModal, setShowTrailerModal] = useState(false)
+  const backdropUrl = tmdb.getImageUrl(show.backdrop_path, 'backdrop', 'large')
+  const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', 'large')
 
-  const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore();
-  const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore();
+  const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore()
+  const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore()
+  const { user: authUser, loading: authLoading } = useAuth()
 
-  const inWatchlist = isInWatchlist(show.id);
-  const isFav = isFavorite(show.id);
+  const inWatchlist = isInWatchlist(show.id)
+  const isFav = isFavorite(show.id)
+  const currentUser = user ?? authUser
 
   // Find trailer video
   const trailer = show.videos?.results.find(
     (v) => v.site === 'YouTube' && v.type === 'Trailer'
-  );
+  )
 
   const handleWatchlist = () => {
-    if (!user) {
-      window.location.href = '/auth/sign-in';
-      return;
+    if (!currentUser) {
+      if (authLoading) return
+      window.location.href = '/auth/sign-in'
+      return
     }
     if (inWatchlist) {
-      removeFromWatchlist(show.id);
+      removeFromWatchlist(show.id)
     } else {
-      addToWatchlist(show, 'tv');
+      addToWatchlist(show, 'tv')
     }
-  };
+  }
 
   const handleFavorite = () => {
-    if (!user) {
-      window.location.href = '/auth/sign-in';
-      return;
+    if (!currentUser) {
+      if (authLoading) return
+      window.location.href = '/auth/sign-in'
+      return
     }
     if (isFav) {
-      removeFromFavorites(show.id);
+      removeFromFavorites(show.id)
     } else {
-      addToFavorites(show, 'tv');
+      addToFavorites(show, 'tv')
     }
-  };
+  }
 
   return (
     <section className="relative min-h-[80vh] flex items-end">
@@ -161,10 +166,10 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
                   className="gap-2"
                   onClick={() => {
                     if (!user) {
-                      window.location.href = '/auth/sign-in';
-                      return;
+                      window.location.href = '/auth/sign-in'
+                      return
                     }
-                    setShowTrailerModal(true);
+                    setShowTrailerModal(true)
                   }}
                   disabled={!trailer}
                 >
@@ -223,5 +228,5 @@ export default function TVShowHero({ show }: TVShowHeroProps) {
         />
       )}
     </section>
-  );
+  )
 }

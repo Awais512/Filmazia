@@ -1,5 +1,8 @@
-import { FavoritesClient } from '@/features/favorites';
+import { requireAuth } from '@/features/auth/utils/require-auth'
+import { FavoritesClient } from '@/features/favorites'
 
-export default function FavoritesPage() {
-  return <FavoritesClient />;
+export default async function FavoritesPage() {
+  await requireAuth()
+
+  return <FavoritesClient />
 }

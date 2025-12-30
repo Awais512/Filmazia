@@ -1,61 +1,66 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Star, Bookmark, Heart, Plus } from 'lucide-react';
-import { Movie } from '@/shared/tmdb/types';
-import { tmdb } from '@/shared/tmdb/api';
-import { useWatchlistStore, useFavoritesStore } from '@/store';
-import { cn, getRatingColor, getYear } from '@/shared/utils';
-import { useAuth } from '@/features/auth';
+import { useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { Star, Bookmark, Heart, Plus } from 'lucide-react'
+import { Movie } from '@/shared/tmdb/types'
+import { tmdb } from '@/shared/tmdb/api'
+import { useWatchlistStore, useFavoritesStore } from '@/store'
+import { cn, getRatingColor, getYear } from '@/shared/utils'
+import { User } from '@supabase/supabase-js'
+import { useAuth } from '@/features/auth/components/auth-provider'
 
 interface MovieCardPosterProps {
-  movie: Movie;
-  priority?: boolean;
-  className?: string;
+  movie: Movie
+  priority?: boolean
+  className?: string
+  user?: User | null
 }
 
-export default function MovieCardPoster({ movie, priority = false, className }: MovieCardPosterProps) {
-  const [imageError, setImageError] = useState(false);
-  const { user } = useAuth();
-  const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore();
-  const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore();
-  const [showActions, setShowActions] = useState(false);
+export default function MovieCardPoster({ movie, priority = false, className, user }: MovieCardPosterProps) {
+  const [imageError, setImageError] = useState(false)
+  const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore()
+  const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore()
+  const [showActions, setShowActions] = useState(false)
+  const { user: authUser, loading: authLoading } = useAuth()
 
-  const inWatchlist = isInWatchlist(movie.id);
-  const isFav = isFavorite(movie.id);
-  const posterUrl = tmdb.getImageUrl(movie.poster_path, 'poster', 'medium');
-  const year = getYear(movie.release_date);
+  const inWatchlist = isInWatchlist(movie.id)
+  const isFav = isFavorite(movie.id)
+  const posterUrl = tmdb.getImageUrl(movie.poster_path, 'poster', 'medium')
+  const year = getYear(movie.release_date)
+  const currentUser = user ?? authUser
 
   const handleWatchlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!user) {
-      window.location.href = '/auth/sign-in';
-      return;
+    e.preventDefault()
+    e.stopPropagation()
+    if (!currentUser) {
+      if (authLoading) return
+      window.location.href = '/auth/sign-in'
+      return
     }
     if (inWatchlist) {
-      removeFromWatchlist(movie.id);
+      removeFromWatchlist(movie.id)
     } else {
-      addToWatchlist(movie, 'movie');
+      addToWatchlist(movie, 'movie')
     }
-  };
+  }
 
   const handleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!user) {
-      window.location.href = '/auth/sign-in';
-      return;
+    e.preventDefault()
+    e.stopPropagation()
+    if (!currentUser) {
+      if (authLoading) return
+      window.location.href = '/auth/sign-in'
+      return
     }
     if (isFav) {
-      removeFromFavorites(movie.id);
+      removeFromFavorites(movie.id)
     } else {
-      addToFavorites(movie, 'movie');
+      addToFavorites(movie, 'movie')
     }
-  };
+  }
 
   return (
     <motion.div
@@ -134,5 +139,5 @@ export default function MovieCardPoster({ movie, priority = false, className }: 
         </div>
       </Link>
     </motion.div>
-  );
+  )
 }
