@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           getWatchlistAction(),
         ]);
         if (cancelled) return;
-        setFavoritesFromServer(favoritesData.items, favoritesData.folders);
+        setFavoritesFromServer(favoritesData.items);
         setWatchlistFromServer(watchlistData);
       } catch {
         return;

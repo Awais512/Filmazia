@@ -6,22 +6,17 @@ import { motion } from 'framer-motion';
 import { useFavoritesStore } from '@/store';
 import { MovieCardPoster } from '@/features/movies';
 import { TVShowCardPoster } from '@/features/tv';
-import { MovieGridSkeleton, EmptyState, Modal, Button, Input } from '@/shared/ui';
+import { MovieGridSkeleton, EmptyState, Button } from '@/shared/ui';
 import { Movie, TVShow } from '@/shared/tmdb/types';
-import { Folder, FolderPlus, Trash2 } from 'lucide-react';
 import { getFavoritesContent } from '@/app/actions';
 
 export function FavoritesClient() {
   const store = useFavoritesStore();
   const [items, setItems] = useState<(Movie | TVShow)[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeFolder, setActiveFolder] = useState<string | null>(null);
-  const [showCreateFolder, setShowCreateFolder] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
 
   // Memoize to prevent new array reference on each render
   const favoriteItems = useMemo(() => Object.values(store.items), [store.items]);
-  const allFolders = useMemo(() => Object.values(store.folders), [store.folders]);
 
   // Fetch items using optimized server action
   useEffect(() => {
@@ -33,13 +28,10 @@ export function FavoritesClient() {
       setLoading(true);
 
       try {
-        const itemsToFetch = favoriteItems
-          .filter((item) => !activeFolder || item.folderId === activeFolder)
-          .map((item) => ({
-            id: item.id,
-            type: (item.type || 'movie') as 'movie' | 'tv',
-            folderId: item.folderId,
-          }));
+        const itemsToFetch = favoriteItems.map((item) => ({
+          id: item.id,
+          type: (item.type || 'movie') as 'movie' | 'tv',
+        }));
 
         if (itemsToFetch.length === 0) {
           if (!cancelled) {
@@ -68,25 +60,13 @@ export function FavoritesClient() {
     return () => {
       cancelled = true;
     };
-  }, [favoriteItems.length, activeFolder]);
-
-  const handleCreateFolder = () => {
-    if (newFolderName.trim()) {
-      store.createFolder(newFolderName.trim());
-      setNewFolderName('');
-      setShowCreateFolder(false);
-    }
-  };
+  }, [favoriteItems.length]);
 
   const handleRemove = (id: number) => {
     store.remove(id);
   };
 
-  const handleDeleteFolder = (folderId: string) => {
-    store.deleteFolder(folderId);
-  };
-
-  if (favoriteItems.length === 0 && allFolders.length === 0) {
+  if (favoriteItems.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
         <EmptyState
@@ -123,51 +103,8 @@ export function FavoritesClient() {
               {favoriteItems.length} items favorited
             </p>
           </div>
-          <Button onClick={() => setShowCreateFolder(true)} className="gap-2">
-            <FolderPlus className="w-4 h-4" />
-            New Collection
-          </Button>
+          <div />
         </div>
-
-        {allFolders.length > 0 && (
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setActiveFolder(null)}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                activeFolder === null
-                  ? 'bg-accent-amber text-cinematic-black'
-                  : 'bg-cinematic-gray text-gray-300 hover:text-white'
-              }`}
-            >
-              <Folder className="w-4 h-4" />
-              All
-            </button>
-            {allFolders.map((folder) => (
-              <div
-                key={folder.id}
-                className="group flex items-center gap-1"
-              >
-                <button
-                  onClick={() => setActiveFolder(folder.id)}
-                  className={`px-4 py-2 rounded-l-lg flex items-center gap-2 transition-colors ${
-                    activeFolder === folder.id
-                      ? 'bg-accent-amber text-cinematic-black'
-                      : 'bg-cinematic-gray text-gray-300 hover:text-white'
-                  }`}
-                >
-                  <Folder className="w-4 h-4" />
-                  {folder.name}
-                </button>
-                <button
-                  onClick={() => handleDeleteFolder(folder.id)}
-                  className="px-2 py-2 bg-cinematic-gray text-gray-400 rounded-r-lg hover:text-red-400 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
 
         {loading ? (
           <MovieGridSkeleton count={Math.max(favoriteItems.length, 10)} />
@@ -200,26 +137,6 @@ export function FavoritesClient() {
         )}
       </motion.div>
 
-      <Modal
-        isOpen={showCreateFolder}
-        onClose={() => setShowCreateFolder(false)}
-        title="Create New Collection"
-      >
-        <div className="space-y-4">
-          <Input
-            label="Collection Name"
-            placeholder="e.g., Sci-Fi Classics"
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-          />
-          <div className="flex justify-end gap-3">
-            <Button variant="ghost" onClick={() => setShowCreateFolder(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateFolder}>Create</Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

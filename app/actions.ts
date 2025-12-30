@@ -172,53 +172,17 @@ export async function getWatchlistContent(ids: { id: number; type: 'movie' | 'tv
   return { movies, tvShows };
 }
 
-export async function getFavoritesContent(ids: { id: number; type: 'movie' | 'tv'; folderId?: string }[]): Promise<{
+export async function getFavoritesContent(ids: { id: number; type: 'movie' | 'tv' }[]): Promise<{
   movies: Movie[];
   tvShows: TVShow[];
-  byFolder: Record<string, { movies: Movie[]; tvShows: TVShow[] }>;
 }> {
-  const byFolder: Record<string, { movies: Movie[]; tvShows: TVShow[] }> = {};
-
-  // Group by folder
-  const folderItems: Record<string, { movieIds: number[]; tvIds: number[] }> = {};
-  for (const item of ids) {
-    const folderKey = item.folderId || 'default';
-    if (!folderItems[folderKey]) {
-      folderItems[folderKey] = { movieIds: [], tvIds: [] };
-    }
-    if (item.type === 'movie') {
-      folderItems[folderKey].movieIds.push(item.id);
-    } else {
-      folderItems[folderKey].tvIds.push(item.id);
-    }
-  }
-
-  // Fetch for each folder
-  const results = await Promise.all(
-    Object.entries(folderItems).map(async ([folderId, { movieIds, tvIds }]) => {
-      const [movies, tvShows] = await Promise.all([
-        getMoviesByIds(movieIds),
-        getTVShowsByIds(tvIds),
-      ]);
-      return { folderId, movies, tvShows };
-    })
-  );
-
-  for (const result of results) {
-    byFolder[result.folderId] = {
-      movies: result.movies,
-      tvShows: result.tvShows,
-    };
-  }
-
-  // Also return flat lists
-  const allMovieIds = ids.filter((item) => item.type === 'movie').map((item) => item.id);
-  const allTvIds = ids.filter((item) => item.type === 'tv').map((item) => item.id);
+  const movieIds = ids.filter((item) => item.type === 'movie').map((item) => item.id);
+  const tvIds = ids.filter((item) => item.type === 'tv').map((item) => item.id);
 
   const [movies, tvShows] = await Promise.all([
-    getMoviesByIds(allMovieIds),
-    getTVShowsByIds(allTvIds),
+    getMoviesByIds(movieIds),
+    getTVShowsByIds(tvIds),
   ]);
 
-  return { movies, tvShows, byFolder };
+  return { movies, tvShows };
 }

@@ -197,14 +197,6 @@ export interface WatchlistItem {
 export interface FavoriteItem {
   id: number;
   addedAt: string;
-  folderId?: string;
-}
-
-export interface FavoriteFolder {
-  id: string;
-  name: string;
-  movieIds: number[];
-  createdAt: string;
 }
 
 export interface SearchFilters {

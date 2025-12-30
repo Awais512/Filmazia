@@ -21,20 +21,6 @@ export const users = pgTable('users', {
     .notNull(),
 });
 
-export const favoriteFolders = pgTable('favorite_folders', {
-  id: text('id').primaryKey(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
 export const favorites = pgTable(
   'favorites',
   {
@@ -45,9 +31,6 @@ export const favorites = pgTable(
     itemType: text('item_type').notNull(),
     title: text('title').notNull(),
     posterPath: text('poster_path'),
-    folderId: text('folder_id').references(() => favoriteFolders.id, {
-      onDelete: 'set null',
-    }),
     addedAt: timestamp('added_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
