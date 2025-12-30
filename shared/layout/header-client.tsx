@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Menu, X, Film, User, LogOut, Settings } from 'lucide-react'
@@ -18,8 +18,26 @@ interface HeaderClientProps {
 export function HeaderClient({ user }: HeaderClientProps) {
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { signOut } = useAuth()
+
+  // NEW: Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showUserMenu])
 
   const publicNavLinks = [
     { href: '/', label: 'Home' },
@@ -81,7 +99,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
 
             {user ? (
               /* User Menu */
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 p-2 text-gray-300 hover:text-accent-amber transition-colors"

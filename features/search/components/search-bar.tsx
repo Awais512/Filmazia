@@ -19,6 +19,23 @@ export default function SearchBar() {
     }
   }, [isSearchOpen]);
 
+  // NEW: Keyboard shortcuts - Ctrl/Cmd+K to open, Escape to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === 'Escape' && isSearchOpen) {
+        setSearchOpen(false);
+        setInputValue('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchOpen, setSearchOpen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
@@ -48,28 +65,36 @@ export default function SearchBar() {
     <>
       <button
         onClick={() => setSearchOpen(true)}
-        className="p-2 text-gray-300 hover:text-accent-amber transition-colors"
+        className="p-2 text-gray-300 hover:text-accent-amber transition-colors relative group"
         aria-label="Open search"
       >
         <Search className="w-5 h-5" />
+        {/* Keyboard shortcut hint */}
+        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-cinematic-dark text-gray-400 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-cinematic-gray">
+          Ctrl+K
+        </span>
       </button>
 
       <AnimatePresence>
         {isSearchOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
-            onClick={() => setSearchOpen(false)}
-          >
+          <>
+            {/* Backdrop - click closes the search */}
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="max-w-2xl mx-auto px-4 pt-20"
-              onClick={(e) => e.stopPropagation()}
-            >
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+              onClick={() => setSearchOpen(false)}
+            />
+
+            {/* Search Content - click doesn't close */}
+            <div className="fixed inset-x-0 top-0 z-50 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-2xl mx-auto px-4 pt-20 pointer-events-auto"
+              >
               <form onSubmit={handleSubmit} className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
                 <input
@@ -77,7 +102,7 @@ export default function SearchBar() {
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Search movies..."
+                  placeholder="Search movies... (Ctrl+K)"
                   className="w-full bg-cinematic-gray border border-cinematic-light rounded-xl px-12 py-4 text-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent-amber"
                 />
                 {inputValue && (
@@ -108,7 +133,8 @@ export default function SearchBar() {
                 </div>
               )}
             </motion.div>
-          </motion.div>
+            </div>
+          </>
         )}
       </AnimatePresence>
     </>
