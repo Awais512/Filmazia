@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { TVShowHero, TVShowOverview, TVShowCast, TVShowRecommendations, TVShowInfo } from '@/features/tv';
+import { TVShowHero, TVShowOverview, TVShowCast, TVShowRecommendations, TVShowInfo, TVShowStreamingProviders } from '@/features/tv';
 import { tmdb } from '@/shared/tmdb/api';
 
 export const dynamic = 'force-dynamic';
@@ -44,6 +44,8 @@ export default async function TVShowPage({ params }: TVShowPageProps) {
           <TVShowOverview overview={show.overview} />
 
           <TVShowInfo show={show} />
+
+          <TVShowStreamingProviders show={show} />
 
           <TVShowCast credits={show.credits} />
 

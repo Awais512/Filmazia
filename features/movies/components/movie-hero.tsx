@@ -1,73 +1,87 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Play, Plus, Heart, Star, Clock, Calendar, Check } from 'lucide-react'
-import { MovieDetails } from '@/shared/tmdb/types'
-import { tmdb } from '@/shared/tmdb/api'
-import { useWatchlistStore, useFavoritesStore } from '@/store'
-import { formatRuntime, formatDate, getYear } from '@/shared/utils'
-import { Button } from '@/shared/ui'
-import { VideoModal } from '@/components/ui/video-modal'
-import { User } from '@supabase/supabase-js'
-import { useAuth } from '@/features/auth/components/auth-provider'
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Play, Plus, Heart, Star, Clock, Calendar, Check } from "lucide-react";
+import { MovieDetails } from "@/shared/tmdb/types";
+import { tmdb } from "@/shared/tmdb/api";
+import { useWatchlistStore, useFavoritesStore } from "@/store";
+import { formatRuntime, formatDate, getYear } from "@/shared/utils";
+import { Button } from "@/shared/ui";
+import { VideoModal } from "@/components/ui/video-modal";
+import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/features/auth/components/auth-provider";
 
 interface MovieHeroProps {
-  movie: MovieDetails
-  user?: User | null
+  movie: MovieDetails;
+  user?: User | null;
 }
 
 export default function MovieHero({ movie, user }: MovieHeroProps) {
-  const [hydrated, setHydrated] = useState(false)
-  const [showTrailerModal, setShowTrailerModal] = useState(false)
-  const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore()
-  const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore()
-  const { user: authUser, loading: authLoading } = useAuth()
+  const [hydrated, setHydrated] = useState(false);
+  const [showTrailerModal, setShowTrailerModal] = useState(false);
+  const {
+    isInWatchlist,
+    add: addToWatchlist,
+    remove: removeFromWatchlist,
+  } = useWatchlistStore();
+  const {
+    isFavorite,
+    add: addToFavorites,
+    remove: removeFromFavorites,
+  } = useFavoritesStore();
+  const { user: authUser, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    setHydrated(true)
-  }, [])
+    setHydrated(true);
+  }, []);
 
-  const inWatchlist = hydrated && isInWatchlist(movie.id)
-  const isFav = hydrated && isFavorite(movie.id)
-  const backdropUrl = tmdb.getImageUrl(movie.backdrop_path, 'backdrop', 'large')
-  const currentUser = user ?? authUser
+  const inWatchlist = hydrated && isInWatchlist(movie.id);
+  const isFav = hydrated && isFavorite(movie.id);
+  const backdropUrl = tmdb.getImageUrl(
+    movie.backdrop_path,
+    "backdrop",
+    "large"
+  );
+  const currentUser = user ?? authUser;
 
-  const director = movie.credits?.crew?.find((person) => person.job === 'Director')
-  const cast = movie.credits?.cast?.slice(0, 4)
+  const director = movie.credits?.crew?.find(
+    (person) => person.job === "Director"
+  );
+  const cast = movie.credits?.cast?.slice(0, 4);
 
   // Find trailer video
   const trailer = movie.videos?.results.find(
-    (v) => v.site === 'YouTube' && v.type === 'Trailer'
-  )
+    (v) => v.site === "YouTube" && v.type === "Trailer"
+  );
 
   const handleWatchlist = () => {
     if (!currentUser) {
-      if (authLoading) return
-      window.location.href = '/auth/sign-in'
-      return
+      if (authLoading) return;
+      window.location.href = "/auth/sign-in";
+      return;
     }
     if (inWatchlist) {
-      removeFromWatchlist(movie.id)
+      removeFromWatchlist(movie.id);
     } else {
-      addToWatchlist(movie, 'movie')
+      addToWatchlist(movie, "movie");
     }
-  }
+  };
 
   const handleFavorite = () => {
     if (!currentUser) {
-      if (authLoading) return
-      window.location.href = '/auth/sign-in'
-      return
+      if (authLoading) return;
+      window.location.href = "/auth/sign-in";
+      return;
     }
     if (isFav) {
-      removeFromFavorites(movie.id)
+      removeFromFavorites(movie.id);
     } else {
-      addToFavorites(movie, 'movie')
+      addToFavorites(movie, "movie");
     }
-  }
+  };
 
   return (
     <div className="relative min-h-[70vh] w-full">
@@ -97,7 +111,7 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
             <div className="relative w-64 lg:w-80 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl cinematic-shadow">
               {movie.poster_path && (
                 <Image
-                  src={tmdb.getImageUrl(movie.poster_path, 'poster', 'large')!}
+                  src={tmdb.getImageUrl(movie.poster_path, "poster", "large")!}
                   alt={movie.title}
                   fill
                   className="object-cover"
@@ -118,7 +132,9 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
                 {movie.title}
               </h1>
               {movie.tagline && (
-                <p className="mt-4 text-lg text-gray-400 italic">"{movie.tagline}"</p>
+                <p className="mt-4 text-lg text-gray-400 italic">
+                  "{movie.tagline}"
+                </p>
               )}
             </motion.div>
 
@@ -130,9 +146,16 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
             >
               {movie.vote_average > 0 && (
                 <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-accent-amber" fill="currentColor" />
-                  <span className="font-medium">{movie.vote_average.toFixed(1)}</span>
-                  <span className="text-gray-500">({movie.vote_count} votes)</span>
+                  <Star
+                    className="w-5 h-5 text-accent-amber"
+                    fill="currentColor"
+                  />
+                  <span className="font-medium">
+                    {movie.vote_average.toFixed(1)}
+                  </span>
+                  <span className="text-gray-500">
+                    ({movie.vote_count} votes)
+                  </span>
                 </div>
               )}
               {movie.runtime && (
@@ -175,7 +198,9 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
               className="space-y-4"
             >
               <h3 className="text-lg font-medium text-white">Overview</h3>
-              <p className="text-gray-300 leading-relaxed max-w-2xl">{movie.overview}</p>
+              <p className="text-gray-300 leading-relaxed max-w-2xl">
+                {movie.overview}
+              </p>
             </motion.div>
 
             {director && (
@@ -204,23 +229,35 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
                   {cast.map((actor) => (
                     <div key={actor.id} className="flex items-center gap-3">
                       {actor.profile_path ? (
-                        <Image
-                          src={tmdb.getImageUrl(actor.profile_path, 'profile', 'small')!}
-                          alt={actor.name}
-                          width={48}
-                          height={48}
-                          className="rounded-full object-cover"
-                        />
+                        <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                          <Image
+                            src={
+                              tmdb.getImageUrl(
+                                actor.profile_path,
+                                "profile",
+                                "small"
+                              )!
+                            }
+                            alt={actor.name}
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-cinematic-gray flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-cinematic-gray flex items-center justify-center flex-shrink-0">
                           <span className="text-gray-400 text-sm">
                             {actor.name.charAt(0)}
                           </span>
                         </div>
                       )}
                       <div>
-                        <p className="text-sm font-medium text-white">{actor.name}</p>
-                        <p className="text-xs text-gray-500">{actor.character}</p>
+                        <p className="text-sm font-medium text-white">
+                          {actor.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {actor.character}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -239,34 +276,41 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
                 className="gap-2"
                 onClick={() => {
                   if (!currentUser) {
-                    if (authLoading) return
-                    window.location.href = '/auth/sign-in'
-                    return
+                    if (authLoading) return;
+                    window.location.href = "/auth/sign-in";
+                    return;
                   }
-                  setShowTrailerModal(true)
+                  setShowTrailerModal(true);
                 }}
                 disabled={!trailer}
               >
                 <Play className="w-5 h-5" />
-                {trailer ? 'Watch Trailer' : 'No Trailer'}
+                {trailer ? "Watch Trailer" : "No Trailer"}
               </Button>
               <Button
-                variant={inWatchlist ? 'primary' : 'outline'}
+                variant={inWatchlist ? "primary" : "outline"}
                 size="lg"
                 onClick={handleWatchlist}
                 className="gap-2"
               >
-                {inWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
+                {inWatchlist ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  <Plus className="w-5 h-5" />
+                )}
+                {inWatchlist ? "In Watchlist" : "Add to Watchlist"}
               </Button>
               <Button
-                variant={isFav ? 'primary' : 'ghost'}
+                variant={isFav ? "primary" : "ghost"}
                 size="lg"
                 onClick={handleFavorite}
                 className="gap-2"
               >
-                <Heart className="w-5 h-5" fill={isFav ? 'currentColor' : 'none'} />
-                {isFav ? 'Favorited' : 'Favorite'}
+                <Heart
+                  className="w-5 h-5"
+                  fill={isFav ? "currentColor" : "none"}
+                />
+                {isFav ? "Favorited" : "Favorite"}
               </Button>
             </motion.div>
           </div>
@@ -283,5 +327,5 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
         />
       )}
     </div>
-  )
+  );
 }

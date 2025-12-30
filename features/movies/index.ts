@@ -8,3 +8,6 @@ export * from './components/movie-recommendations';
 export { default as MovieActionsMenu } from './components/movie-actions-menu';
 export * from './components/movie-rating-badge';
 export * from './components/movies-page-client';
+
+// NEW: Streaming providers component
+export { MovieStreamingProviders } from '@/shared/tmdb/streaming-providers';

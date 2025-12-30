@@ -86,6 +86,8 @@ export interface MovieDetails extends Movie {
     total_pages: number;
     total_results: number;
   };
+  // NEW: Watch providers data
+  watch_providers: WatchProvidersResponse | null;
 }
 
 export interface MovieResponse {
@@ -142,6 +144,27 @@ export interface Provider {
   id: number;
   name: string;
   logo_path: string | null;
+}
+
+// NEW: Watch provider types for streaming availability
+export interface WatchProviderResult {
+  link: string;
+  flatrate?: WatchProviderItem[];
+  rent?: WatchProviderItem[];
+  buy?: WatchProviderItem[];
+  flatrate_and_rent?: WatchProviderItem[];
+}
+
+export interface WatchProviderItem {
+  display_priority: number;
+  logo_path: string;
+  provider_id: number;
+  provider_name: string;
+}
+
+export interface WatchProvidersResponse {
+  id: number;
+  results: Record<string, WatchProviderResult>;
 }
 
 export interface Person {
@@ -314,6 +337,8 @@ export interface TVShowDetails extends TVShow {
     total_pages: number;
     total_results: number;
   };
+  // NEW: Watch providers data
+  watch_providers: WatchProvidersResponse | null;
 }
 
 export interface TVShowResponse {

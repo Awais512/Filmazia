@@ -1,4 +1,4 @@
-import { Movie, MovieDetails, MovieResponse, TrendingResponse, SearchResponse, SearchFilters, GenreListResponse, TVShow, TVShowDetails, TVShowResponse } from './tmdb-types';
+import { Movie, MovieDetails, MovieResponse, TrendingResponse, SearchResponse, SearchFilters, GenreListResponse, TVShow, TVShowDetails, TVShowResponse, WatchProvidersResponse } from './tmdb-types';
 import { TMDB_IMAGE_BASE_URL, TMDB_IMAGE_SIZES } from './constants';
 
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
@@ -58,11 +58,12 @@ class TMDBClient {
   }
 
   async getMovieDetails(id: number): Promise<MovieDetails> {
-    const [movie, credits, recommendations, videos] = await Promise.all([
+    const [movie, credits, recommendations, videos, watchProviders] = await Promise.all([
       this.fetch<MovieDetails>(`/movie/${id}`),
       this.fetch<{ cast: MovieDetails['credits']['cast']; crew: MovieDetails['credits']['crew'] }>(`/movie/${id}/credits`),
       this.fetch<MovieResponse>(`/movie/${id}/recommendations`, { page: 1 }),
       this.fetch<{ results: MovieDetails['videos']['results'] }>(`/movie/${id}/videos`),
+      this.fetch<WatchProvidersResponse>(`/movie/${id}/watch/providers`).catch(() => null),
     ]);
 
     return {
@@ -70,6 +71,7 @@ class TMDBClient {
       credits,
       recommendations,
       videos,
+      watch_providers: watchProviders,
     };
   }
 
@@ -140,11 +142,12 @@ class TMDBClient {
   }
 
   async getTVShowDetails(id: number): Promise<TVShowDetails> {
-    const [show, credits, recommendations, videos] = await Promise.all([
+    const [show, credits, recommendations, videos, watchProviders] = await Promise.all([
       this.fetch<TVShowDetails>(`/tv/${id}`),
       this.fetch<{ cast: TVShowDetails['credits']['cast']; crew: TVShowDetails['credits']['crew'] }>(`/tv/${id}/credits`),
       this.fetch<{ page: number; results: TVShow[]; total_pages: number; total_results: number }>(`/tv/${id}/recommendations`, { page: 1 }),
       this.fetch<{ results: TVShowDetails['videos']['results'] }>(`/tv/${id}/videos`),
+      this.fetch<WatchProvidersResponse>(`/tv/${id}/watch/providers`).catch(() => null),
     ]);
 
     return {
@@ -152,6 +155,7 @@ class TMDBClient {
       credits,
       recommendations,
       videos,
+      watch_providers: watchProviders,
     };
   }
 

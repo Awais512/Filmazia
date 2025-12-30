@@ -159,6 +159,40 @@ export default function TVShowHero({ show, user }: TVShowHeroProps) {
               <p className="text-gray-300 leading-relaxed">{show.overview}</p>
             </div>
 
+            {/* Top Cast */}
+            {show.credits?.cast && show.credits.cast.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-medium text-white mb-3">Top Cast</h3>
+                <div className="flex flex-wrap gap-4">
+                  {show.credits.cast.slice(0, 4).map((actor) => (
+                    <div key={actor.id} className="flex items-center gap-3">
+                      {actor.profile_path ? (
+                        <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                          <Image
+                            src={tmdb.getImageUrl(actor.profile_path, 'profile', 'small')!}
+                            alt={actor.name}
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-cinematic-gray flex items-center justify-center flex-shrink-0">
+                          <span className="text-gray-400 text-sm">
+                            {actor.name.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-white">{actor.name}</p>
+                        <p className="text-xs text-gray-500">{actor.character}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
             <div
               className="relative"

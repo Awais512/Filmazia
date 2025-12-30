@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { MovieHero, MovieOverview, MovieCast, MovieRecommendations, MovieInfo } from '@/features/movies';
+import { MovieHero, MovieOverview, MovieCast, MovieRecommendations, MovieInfo, MovieStreamingProviders } from '@/features/movies';
 import { tmdb } from '@/shared/tmdb/api';
 
 export const dynamic = 'force-dynamic';
@@ -44,6 +44,8 @@ export default async function MoviePage({ params }: MoviePageProps) {
           <MovieOverview overview={movie.overview} />
 
           <MovieInfo movie={movie} />
+
+          <MovieStreamingProviders movie={movie} />
 
           <MovieCast credits={movie.credits} />
 
