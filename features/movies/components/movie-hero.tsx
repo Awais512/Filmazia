@@ -45,7 +45,7 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
     "backdrop",
     "large"
   );
-  const currentUser = user ?? authUser;
+  const currentUser = authLoading ? user ?? authUser : authUser;
 
   const director = movie.credits?.crew?.find(
     (person) => person.job === "Director"

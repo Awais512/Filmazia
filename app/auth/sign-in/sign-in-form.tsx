@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { Eye, EyeOff, ArrowRight, Mail, Lock } from 'lucide-react'
 import { signInAction } from '@/features/auth/actions'
+import { supabase } from '@/features/auth/utils/supabase-client'
 import { Button } from '@/shared/ui'
 
 interface SignInForm {
@@ -44,6 +45,12 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
       setError(result.error)
       setLoading(false)
     } else {
+      if (result.session) {
+        await supabase.auth.setSession({
+          access_token: result.session.accessToken,
+          refresh_token: result.session.refreshToken,
+        })
+      }
       router.push(redirectTo || '/')
       router.refresh()
     }

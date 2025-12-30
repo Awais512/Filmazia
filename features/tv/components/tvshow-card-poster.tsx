@@ -35,7 +35,7 @@ export default function TVShowCardPoster({ show, priority = false, className, us
   const isFav = hydrated && isFavorite(show.id)
   const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', 'medium')
   const year = show.first_air_date ? new Date(show.first_air_date).getFullYear() : ''
-  const currentUser = user ?? authUser
+  const currentUser = authLoading ? user ?? authUser : authUser
 
   const handleWatchlist = (e: React.MouseEvent) => {
     e.preventDefault()

@@ -5,7 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { getFavoritesAction } from '@/features/favorites/actions';
 import { getWatchlistAction } from '@/features/watchlist/actions';
 import { useFavoritesStore, useWatchlistStore } from '@/store';
-import { createClient } from '@/features/auth/utils/supabase-client';
+import { supabase } from '@/features/auth/utils/supabase-client';
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +22,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
   const setFavoritesFromServer = useFavoritesStore((state) => state.setFromServer);
   const setWatchlistFromServer = useWatchlistStore((state) => state.setFromServer);
 
@@ -88,6 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
   };
 
   return (

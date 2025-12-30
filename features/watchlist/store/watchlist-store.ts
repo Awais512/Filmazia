@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Movie, TVShow, WatchlistItem } from '@/shared/tmdb/types';
-import { createClient } from '@/features/auth/utils/supabase-client';
+import { supabase } from '@/features/auth/utils/supabase-client';
 import {
   addWatchlistAction,
   markWatchlistUnwatchedAction,
@@ -29,8 +29,6 @@ interface WatchlistState {
   clear: () => void;
   setFromServer: (items: WatchlistEntry[]) => void;
 }
-
-const supabase = createClient();
 
 const syncIfAuthenticated = async (action: () => Promise<void>) => {
   try {

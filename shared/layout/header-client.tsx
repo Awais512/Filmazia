@@ -2,11 +2,13 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Menu, X, Film, User, LogOut, Settings } from 'lucide-react'
 import { useUIStore } from '@/store'
 import { SearchBar } from '@/features/search'
 import { signOutAction } from '@/features/auth/actions'
+import { useAuth } from '@/features/auth/components/auth-provider'
 import { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface HeaderClientProps {
@@ -16,6 +18,8 @@ interface HeaderClientProps {
 export function HeaderClient({ user }: HeaderClientProps) {
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const router = useRouter()
+  const { signOut } = useAuth()
 
   const publicNavLinks = [
     { href: '/', label: 'Home' },
@@ -30,7 +34,9 @@ export function HeaderClient({ user }: HeaderClientProps) {
 
   const handleSignOut = async () => {
     setShowUserMenu(false)
+    await signOut()
     await signOutAction()
+    router.refresh()
   }
 
   return (

@@ -35,7 +35,7 @@ export default function MovieCardPoster({ movie, priority = false, className, us
   const isFav = hydrated && isFavorite(movie.id)
   const posterUrl = tmdb.getImageUrl(movie.poster_path, 'poster', 'medium')
   const year = getYear(movie.release_date)
-  const currentUser = user ?? authUser
+  const currentUser = authLoading ? user ?? authUser : authUser
 
   const handleWatchlist = (e: React.MouseEvent) => {
     e.preventDefault()

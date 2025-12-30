@@ -35,7 +35,7 @@ export default function TVShowHero({ show, user }: TVShowHeroProps) {
 
   const inWatchlist = hydrated && isInWatchlist(show.id)
   const isFav = hydrated && isFavorite(show.id)
-  const currentUser = user ?? authUser
+  const currentUser = authLoading ? user ?? authUser : authUser
 
   // Find trailer video
   const trailer = show.videos?.results.find(

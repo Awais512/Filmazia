@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Movie, TVShow, FavoriteFolder } from '@/shared/tmdb/types';
 import { generateId } from '@/shared/utils';
-import { createClient } from '@/features/auth/utils/supabase-client';
+import { supabase } from '@/features/auth/utils/supabase-client';
 import {
   addFavoriteAction,
   createFavoriteFolderAction,
@@ -40,8 +40,6 @@ interface FavoritesState {
   clear: () => void;
   setFromServer: (items: FavoriteEntry[], folders: FavoriteFolder[]) => void;
 }
-
-const supabase = createClient();
 
 const syncIfAuthenticated = async (action: () => Promise<void>) => {
   try {

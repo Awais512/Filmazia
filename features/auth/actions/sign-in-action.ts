@@ -8,7 +8,7 @@ export async function signInAction(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -18,5 +18,13 @@ export async function signInAction(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  return { success: true }
+  return {
+    success: true,
+    session: data.session
+      ? {
+          accessToken: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+        }
+      : null,
+  }
 }
