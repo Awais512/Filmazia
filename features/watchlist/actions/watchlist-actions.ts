@@ -86,3 +86,10 @@ export async function markWatchlistUnwatchedAction(payload: { id: number }) {
     .set({ watched: false, watchedAt: null })
     .where(and(eq(watchlist.userId, user.id), eq(watchlist.itemId, payload.id)));
 }
+
+// NEW: Clear all watchlist items for the current user
+export async function clearWatchlistAction() {
+  const user = await requireAuth();
+
+  await db.delete(watchlist).where(eq(watchlist.userId, user.id));
+}

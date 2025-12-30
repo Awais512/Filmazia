@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useWatchlistStore, useFavoritesStore, useRatingsStore } from '@/store'
 import { Button } from '@/shared/ui'
+import { ConfirmModal } from '@/components/ui/confirm-modal'
 import { Star, Bookmark, Heart, Download, Trash2 } from 'lucide-react'
 
 export function ProfileClient() {
@@ -12,6 +14,15 @@ export function ProfileClient() {
 
   const ratings = getAllRatings()
   const averageRating = getAverageRating()
+
+  // NEW: Modal state
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean
+    type: 'watchlist' | 'favorites' | 'ratings' | null
+  }>({
+    isOpen: false,
+    type: null,
+  })
 
   const stats = [
     { icon: Bookmark, label: 'Watchlist', value: Object.keys(watchlistItems).length },
@@ -37,13 +48,49 @@ export function ProfileClient() {
     URL.revokeObjectURL(url)
   }
 
+  // MODIFIED: Open modal instead of native confirm
   const handleClearAll = (type: 'watchlist' | 'favorites' | 'ratings') => {
-    if (confirm(`Are you sure you want to clear your ${type}?`)) {
-      if (type === 'watchlist') clearWatchlist()
-      if (type === 'favorites') clearFavorites()
-      if (type === 'ratings') clearRatings()
+    setModalConfig({ isOpen: true, type })
+  }
+
+  // NEW: Handle modal confirmation
+  const handleConfirmClear = () => {
+    if (modalConfig.type === 'watchlist') clearWatchlist()
+    if (modalConfig.type === 'favorites') clearFavorites()
+    if (modalConfig.type === 'ratings') clearRatings()
+  }
+
+  // NEW: Get modal content based on type
+  const getModalContent = () => {
+    switch (modalConfig.type) {
+      case 'watchlist':
+        return {
+          title: 'Clear Watchlist?',
+          message: `This will remove all ${Object.keys(watchlistItems).length} movies from your watchlist. This action cannot be undone.`,
+          confirmText: 'Clear Watchlist',
+        }
+      case 'favorites':
+        return {
+          title: 'Clear Favorites?',
+          message: `This will remove all ${Object.keys(favoriteItems).length} movies from your favorites. This action cannot be undone.`,
+          confirmText: 'Clear Favorites',
+        }
+      case 'ratings':
+        return {
+          title: 'Clear Ratings?',
+          message: `This will remove all ${ratings.length} of your ratings. This action cannot be undone.`,
+          confirmText: 'Clear Ratings',
+        }
+      default:
+        return {
+          title: 'Confirm',
+          message: 'Are you sure?',
+          confirmText: 'Confirm',
+        }
     }
   }
+
+  const modalContent = getModalContent()
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
@@ -186,6 +233,18 @@ export function ProfileClient() {
           </p>
         </section>
       </motion.div>
+
+      {/* NEW: Confirmation Modal */}
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ isOpen: false, type: null })}
+        onConfirm={handleConfirmClear}
+        title={modalContent.title}
+        message={modalContent.message}
+        confirmText={modalContent.confirmText}
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   )
 }

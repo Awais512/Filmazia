@@ -5,6 +5,7 @@ import { Movie, TVShow, WatchlistItem } from '@/shared/tmdb/types';
 import { supabase } from '@/features/auth/utils/supabase-client';
 import {
   addWatchlistAction,
+  clearWatchlistAction,
   markWatchlistUnwatchedAction,
   markWatchlistWatchedAction,
   removeWatchlistAction,
@@ -108,6 +109,7 @@ export const useWatchlistStore = create<WatchlistState>()((set, get) => ({
 
       clear: () => {
         set({ items: {} });
+        void syncIfAuthenticated(() => clearWatchlistAction());
       },
 
   setFromServer: (items) => {

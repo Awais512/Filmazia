@@ -5,6 +5,7 @@ import { Movie, TVShow } from '@/shared/tmdb/types';
 import { supabase } from '@/features/auth/utils/supabase-client';
 import {
   addFavoriteAction,
+  clearFavoritesAction,
   removeFavoriteAction,
 } from '@/features/favorites/actions';
 
@@ -80,6 +81,7 @@ export const useFavoritesStore = create<FavoritesState>()((set, get) => ({
 
   clear: () => {
     set({ items: {} });
+    void syncIfAuthenticated(() => clearFavoritesAction());
   },
 
   setFromServer: (items) => {

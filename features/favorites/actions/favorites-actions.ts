@@ -62,3 +62,10 @@ export async function removeFavoriteAction(payload: { id: number }) {
     .delete(favorites)
     .where(and(eq(favorites.userId, user.id), eq(favorites.itemId, payload.id)));
 }
+
+// NEW: Clear all favorites for the current user
+export async function clearFavoritesAction() {
+  const user = await requireAuth();
+
+  await db.delete(favorites).where(eq(favorites.userId, user.id));
+}
