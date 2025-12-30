@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Menu, X, Film, User, LogOut, Settings } from 'lucide-react'
@@ -15,12 +16,32 @@ interface HeaderClientProps {
   user: SupabaseUser | null
 }
 
+// Helper to get user display name from metadata
+const getUserDisplayName = (user: SupabaseUser): string => {
+  return user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+}
+
+// Helper to get initials from name
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
 export function HeaderClient({ user }: HeaderClientProps) {
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { signOut } = useAuth()
+
+  // Memoize user display info
+  const userDisplayName = useMemo(() => user ? getUserDisplayName(user) : '', [user])
+  const userInitials = useMemo(() => user ? getInitials(userDisplayName) : '', [user, userDisplayName])
+  const userAvatarUrl = user?.user_metadata?.avatar_url
 
   // NEW: Close user menu when clicking outside
   useEffect(() => {
@@ -102,31 +123,69 @@ export function HeaderClient({ user }: HeaderClientProps) {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-2 text-gray-300 hover:text-accent-amber transition-colors"
+                  className="flex items-center gap-2 p-1 text-gray-300 hover:text-accent-amber transition-colors rounded-full"
                 >
-                  <div className="w-8 h-8 rounded-full bg-cinematic-gray flex items-center justify-center">
-                    <User className="w-4 h-4" />
-                  </div>
+                  {userAvatarUrl ? (
+                    <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-cinematic-gray hover:ring-accent-amber/50 transition-all">
+                      <Image
+                        src={userAvatarUrl}
+                        alt={userDisplayName}
+                        width={36}
+                        height={36}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent-amber to-accent-amber/70 flex items-center justify-center text-white text-sm font-semibold ring-2 ring-cinematic-gray hover:ring-accent-amber/50 transition-all">
+                      {userInitials}
+                    </div>
+                  )}
                 </button>
 
                 <AnimatePresence>
                   {showUserMenu && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-48 bg-cinematic-dark border border-cinematic-gray rounded-xl shadow-xl overflow-hidden"
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-3 w-72 bg-cinematic-dark border border-cinematic-gray rounded-2xl shadow-2xl overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-cinematic-gray">
-                        <p className="text-sm text-white font-medium truncate">
-                          {user.email}
-                        </p>
+                      {/* User Info Section */}
+                      <div className="p-4 bg-gradient-to-b from-cinematic-gray/30 to-transparent">
+                        <div className="flex items-center gap-3">
+                          {userAvatarUrl ? (
+                            <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-accent-amber/30 flex-shrink-0">
+                              <Image
+                                src={userAvatarUrl}
+                                alt={userDisplayName}
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-amber to-accent-amber/70 flex items-center justify-center text-white text-base font-semibold flex-shrink-0">
+                              {userInitials}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-medium truncate">
+                              {userDisplayName}
+                            </p>
+                            <p className="text-sm text-gray-400 truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="py-1">
+
+                      {/* Menu Actions */}
+                      <div className="p-2">
                         <Link
                           href="/profile"
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray transition-colors"
+                          className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray rounded-xl transition-colors"
                         >
                           <User className="w-4 h-4" />
                           Profile
@@ -134,14 +193,15 @@ export function HeaderClient({ user }: HeaderClientProps) {
                         <Link
                           href="/settings"
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray transition-colors"
+                          className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray rounded-xl transition-colors"
                         >
                           <Settings className="w-4 h-4" />
                           Settings
                         </Link>
+                        <div className="h-px bg-cinematic-gray my-2" />
                         <button
                           onClick={handleSignOut}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-300 hover:text-red-400 hover:bg-cinematic-gray transition-colors"
+                          className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-300 hover:text-red-400 hover:bg-cinematic-gray rounded-xl transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
                           Sign Out

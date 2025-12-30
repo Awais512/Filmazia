@@ -1,35 +1,51 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { useWatchlistStore, useFavoritesStore, useRatingsStore } from '@/store'
-import { Button } from '@/shared/ui'
-import { ConfirmModal } from '@/components/ui/confirm-modal'
-import { Star, Bookmark, Heart, Download, Trash2 } from 'lucide-react'
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useWatchlistStore, useFavoritesStore, useRatingsStore } from "@/store";
+import { Button } from "@/shared/ui";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { Star, Bookmark, Heart, Download, Trash2 } from "lucide-react";
 
 export function ProfileClient() {
-  const { items: watchlistItems, clear: clearWatchlist } = useWatchlistStore()
-  const { items: favoriteItems, clear: clearFavorites } = useFavoritesStore()
-  const { getAllRatings, getAverageRating, clear: clearRatings } = useRatingsStore()
+  const { items: watchlistItems, clear: clearWatchlist } = useWatchlistStore();
+  const { items: favoriteItems, clear: clearFavorites } = useFavoritesStore();
+  const {
+    getAllRatings,
+    getAverageRating,
+    clear: clearRatings,
+  } = useRatingsStore();
 
-  const ratings = getAllRatings()
-  const averageRating = getAverageRating()
+  const ratings = getAllRatings();
+  const averageRating = getAverageRating();
 
   // NEW: Modal state
   const [modalConfig, setModalConfig] = useState<{
-    isOpen: boolean
-    type: 'watchlist' | 'favorites' | 'ratings' | null
+    isOpen: boolean;
+    type: "watchlist" | "favorites" | "ratings" | null;
   }>({
     isOpen: false,
     type: null,
-  })
+  });
 
   const stats = [
-    { icon: Bookmark, label: 'Watchlist', value: Object.keys(watchlistItems).length },
-    { icon: Heart, label: 'Favorites', value: Object.keys(favoriteItems).length },
-    { icon: Star, label: 'Avg Rating', value: averageRating > 0 ? averageRating.toFixed(1) : 'N/A' },
-    { icon: Star, label: 'Ratings', value: ratings.length },
-  ]
+    {
+      icon: Bookmark,
+      label: "Watchlist",
+      value: Object.keys(watchlistItems).length,
+    },
+    {
+      icon: Heart,
+      label: "Favorites",
+      value: Object.keys(favoriteItems).length,
+    },
+    {
+      icon: Star,
+      label: "Avg Rating",
+      value: averageRating > 0 ? averageRating.toFixed(1) : "N/A",
+    },
+    { icon: Star, label: "Ratings", value: ratings.length },
+  ];
 
   const handleExportData = () => {
     const data = {
@@ -37,60 +53,68 @@ export function ProfileClient() {
       favorites: Object.entries(favoriteItems),
       ratings: ratings,
       exportedAt: new Date().toISOString(),
-    }
+    };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `filmazia-export-${new Date().toISOString().split('T')[0]}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `filmazia-export-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // MODIFIED: Open modal instead of native confirm
-  const handleClearAll = (type: 'watchlist' | 'favorites' | 'ratings') => {
-    setModalConfig({ isOpen: true, type })
-  }
+  const handleClearAll = (type: "watchlist" | "favorites" | "ratings") => {
+    setModalConfig({ isOpen: true, type });
+  };
 
   // NEW: Handle modal confirmation
   const handleConfirmClear = () => {
-    if (modalConfig.type === 'watchlist') clearWatchlist()
-    if (modalConfig.type === 'favorites') clearFavorites()
-    if (modalConfig.type === 'ratings') clearRatings()
-  }
+    if (modalConfig.type === "watchlist") clearWatchlist();
+    if (modalConfig.type === "favorites") clearFavorites();
+    if (modalConfig.type === "ratings") clearRatings();
+  };
 
   // NEW: Get modal content based on type
   const getModalContent = () => {
     switch (modalConfig.type) {
-      case 'watchlist':
+      case "watchlist":
         return {
-          title: 'Clear Watchlist?',
-          message: `This will remove all ${Object.keys(watchlistItems).length} movies from your watchlist. This action cannot be undone.`,
-          confirmText: 'Clear Watchlist',
-        }
-      case 'favorites':
+          title: "Clear Watchlist?",
+          message: `This will remove all ${
+            Object.keys(watchlistItems).length
+          } movies from your watchlist. This action cannot be undone.`,
+          confirmText: "Clear Watchlist",
+        };
+      case "favorites":
         return {
-          title: 'Clear Favorites?',
-          message: `This will remove all ${Object.keys(favoriteItems).length} movies from your favorites. This action cannot be undone.`,
-          confirmText: 'Clear Favorites',
-        }
-      case 'ratings':
+          title: "Clear Favorites?",
+          message: `This will remove all ${
+            Object.keys(favoriteItems).length
+          } movies from your favorites. This action cannot be undone.`,
+          confirmText: "Clear Favorites",
+        };
+      case "ratings":
         return {
-          title: 'Clear Ratings?',
+          title: "Clear Ratings?",
           message: `This will remove all ${ratings.length} of your ratings. This action cannot be undone.`,
-          confirmText: 'Clear Ratings',
-        }
+          confirmText: "Clear Ratings",
+        };
       default:
         return {
-          title: 'Confirm',
-          message: 'Are you sure?',
-          confirmText: 'Confirm',
-        }
+          title: "Confirm",
+          message: "Are you sure?",
+          confirmText: "Confirm",
+        };
     }
-  }
+  };
 
-  const modalContent = getModalContent()
+  const modalContent = getModalContent();
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
@@ -105,12 +129,14 @@ export function ProfileClient() {
             <h1 className="font-display text-3xl md:text-4xl font-bold text-white">
               My Profile
             </h1>
-            <p className="mt-2 text-gray-400">
-              Track your movie journey
-            </p>
+            <p className="mt-2 text-gray-400">Track your movie journey</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={handleExportData} className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExportData}
+              className="gap-2"
+            >
               <Download className="w-4 h-4" />
               Export Data
             </Button>
@@ -146,7 +172,7 @@ export function ProfileClient() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleClearAll('ratings')}
+                onClick={() => handleClearAll("ratings")}
                 className="text-red-400 hover:text-red-300"
               >
                 <Trash2 className="w-4 h-4" />
@@ -171,8 +197,12 @@ export function ProfileClient() {
                       />
                     )}
                   </div>
-                  <p className="font-medium text-white line-clamp-1">{rating.movieTitle}</p>
-                  <p className="text-sm text-accent-amber">{rating.rating}/10</p>
+                  <p className="font-medium text-white line-clamp-1">
+                    {rating.movieTitle}
+                  </p>
+                  <p className="text-sm text-accent-amber">
+                    {rating.rating}/10
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -186,7 +216,7 @@ export function ProfileClient() {
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
-              onClick={() => handleClearAll('watchlist')}
+              onClick={() => handleClearAll("watchlist")}
               className="p-6 bg-cinematic-gray rounded-xl text-left hover:bg-cinematic-light transition-colors"
             >
               <Trash2 className="w-8 h-8 text-red-400 mb-3" />
@@ -196,7 +226,7 @@ export function ProfileClient() {
               </p>
             </button>
             <button
-              onClick={() => handleClearAll('favorites')}
+              onClick={() => handleClearAll("favorites")}
               className="p-6 bg-cinematic-gray rounded-xl text-left hover:bg-cinematic-light transition-colors"
             >
               <Trash2 className="w-8 h-8 text-red-400 mb-3" />
@@ -225,8 +255,8 @@ export function ProfileClient() {
           </h2>
           <p className="text-gray-400 leading-relaxed">
             Filmazia is your personal movie tracker. Browse thousands of movies,
-            build your watchlist, rate films, and discover new favorites using
-            data from TMDB. All data is stored locally on your device.
+            build your watchlist and discover new favorites using data from
+            TMDB.
           </p>
           <p className="mt-4 text-sm text-gray-500">
             Not affiliated with TMDB. Data provided by The Movie Database.
@@ -246,5 +276,5 @@ export function ProfileClient() {
         variant="danger"
       />
     </div>
-  )
+  );
 }
