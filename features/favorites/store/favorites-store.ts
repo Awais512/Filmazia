@@ -1,7 +1,18 @@
+'use client';
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Movie, TVShow, FavoriteFolder } from '@/shared/tmdb/types';
 import { generateId } from '@/shared/utils';
+import { createClient } from '@/features/auth/utils/supabase-client';
+import {
+  addFavoriteAction,
+  createFavoriteFolderAction,
+  deleteFavoriteFolderAction,
+  removeFavoriteAction,
+  removeFavoriteFromFolderAction,
+  renameFavoriteFolderAction,
+} from '@/features/favorites/actions';
 
 type FavoriteEntry = {
   id: number;
@@ -27,7 +38,22 @@ interface FavoritesState {
   getAll: () => FavoriteEntry[];
   getAllFolders: () => FavoriteFolder[];
   clear: () => void;
+  setFromServer: (items: FavoriteEntry[], folders: FavoriteFolder[]) => void;
 }
+
+const supabase = createClient();
+
+const syncIfAuthenticated = async (action: () => Promise<void>) => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    await action();
+  } catch {
+    return;
+  }
+};
 
 export const useFavoritesStore = create<FavoritesState>()(
   persist(
@@ -49,6 +75,16 @@ export const useFavoritesStore = create<FavoritesState>()(
             },
           },
         }));
+
+        void syncIfAuthenticated(() =>
+          addFavoriteAction({
+            id: item.id,
+            type,
+            title: 'title' in item ? item.title : item.name,
+            poster_path: item.poster_path,
+            folderId,
+          })
+        );
       },
 
       remove: (id) => {
@@ -56,6 +92,8 @@ export const useFavoritesStore = create<FavoritesState>()(
           const { [id]: removed, ...rest } = state.items;
           return { items: rest };
         });
+
+        void syncIfAuthenticated(() => removeFavoriteAction({ id }));
       },
 
       createFolder: (name) => {
@@ -71,6 +109,11 @@ export const useFavoritesStore = create<FavoritesState>()(
             },
           },
         }));
+
+        void syncIfAuthenticated(() =>
+          createFavoriteFolderAction({ id: folderId, name })
+        );
+
         return folderId;
       },
 
@@ -90,6 +133,8 @@ export const useFavoritesStore = create<FavoritesState>()(
 
           return { items: updatedItems, folders: restFolders };
         });
+
+        void syncIfAuthenticated(() => deleteFavoriteFolderAction({ id: folderId }));
       },
 
       renameFolder: (folderId, name) => {
@@ -99,6 +144,10 @@ export const useFavoritesStore = create<FavoritesState>()(
             [folderId]: { ...state.folders[folderId], name },
           },
         }));
+
+        void syncIfAuthenticated(() =>
+          renameFavoriteFolderAction({ id: folderId, name })
+        );
       },
 
       addToFolder: (item, type, folderId) => {
@@ -140,6 +189,10 @@ export const useFavoritesStore = create<FavoritesState>()(
 
           return { folders: updatedFolders, items: updatedItems };
         });
+
+        void syncIfAuthenticated(() =>
+          removeFavoriteFromFolderAction({ id: movieId, folderId })
+        );
       },
 
       isFavorite: (id) => id in get().items,
@@ -152,6 +205,20 @@ export const useFavoritesStore = create<FavoritesState>()(
 
       clear: () => {
         set({ items: {}, folders: {} });
+      },
+
+      setFromServer: (items, folders) => {
+        const nextItems: Record<number, FavoriteEntry> = {};
+        for (const item of items) {
+          nextItems[item.id] = item;
+        }
+
+        const nextFolders: Record<string, FavoriteFolder> = {};
+        for (const folder of folders) {
+          nextFolders[folder.id] = folder;
+        }
+
+        set({ items: nextItems, folders: nextFolders });
       },
     }),
     {

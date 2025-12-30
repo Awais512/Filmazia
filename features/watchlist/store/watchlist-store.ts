@@ -1,6 +1,15 @@
+'use client';
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Movie, TVShow, WatchlistItem } from '@/shared/tmdb/types';
+import { createClient } from '@/features/auth/utils/supabase-client';
+import {
+  addWatchlistAction,
+  markWatchlistUnwatchedAction,
+  markWatchlistWatchedAction,
+  removeWatchlistAction,
+} from '@/features/watchlist/actions';
 
 type WatchlistEntry = WatchlistItem & {
   type: 'movie' | 'tv';
@@ -18,7 +27,22 @@ interface WatchlistState {
   isWatched: (id: number) => boolean;
   getAll: () => WatchlistEntry[];
   clear: () => void;
+  setFromServer: (items: WatchlistEntry[]) => void;
 }
+
+const supabase = createClient();
+
+const syncIfAuthenticated = async (action: () => Promise<void>) => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    await action();
+  } catch {
+    return;
+  }
+};
 
 export const useWatchlistStore = create<WatchlistState>()(
   persist(
@@ -39,6 +63,15 @@ export const useWatchlistStore = create<WatchlistState>()(
             },
           },
         }));
+
+        void syncIfAuthenticated(() =>
+          addWatchlistAction({
+            id: item.id,
+            type,
+            title: 'title' in item ? item.title : item.name,
+            poster_path: item.poster_path,
+          })
+        );
       },
 
       remove: (id) => {
@@ -46,6 +79,8 @@ export const useWatchlistStore = create<WatchlistState>()(
           const { [id]: removed, ...rest } = state.items;
           return { items: rest };
         });
+
+        void syncIfAuthenticated(() => removeWatchlistAction({ id }));
       },
 
       markAsWatched: (id) => {
@@ -55,6 +90,8 @@ export const useWatchlistStore = create<WatchlistState>()(
             [id]: { ...state.items[id], watched: true, watchedAt: new Date().toISOString() },
           },
         }));
+
+        void syncIfAuthenticated(() => markWatchlistWatchedAction({ id }));
       },
 
       markAsUnwatched: (id) => {
@@ -64,6 +101,8 @@ export const useWatchlistStore = create<WatchlistState>()(
             [id]: { ...state.items[id], watched: false, watchedAt: undefined },
           },
         }));
+
+        void syncIfAuthenticated(() => markWatchlistUnwatchedAction({ id }));
       },
 
       isInWatchlist: (id) => id in get().items,
@@ -74,6 +113,14 @@ export const useWatchlistStore = create<WatchlistState>()(
 
       clear: () => {
         set({ items: {} });
+      },
+
+      setFromServer: (items) => {
+        const nextItems: Record<number, WatchlistEntry> = {};
+        for (const item of items) {
+          nextItems[item.id] = item;
+        }
+        set({ items: nextItems });
       },
     }),
     {

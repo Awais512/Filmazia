@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { Eye, EyeOff, ArrowRight, Mail, Lock, User, Check } from 'lucide-react'
 import { Button } from '@/shared/ui'
-import { createClient } from '@/features/auth/utils/supabase-client'
+import { signUpAction } from '@/features/auth/actions'
 
 interface SignUpForm {
   name: string
@@ -18,7 +18,6 @@ interface SignUpForm {
 
 export function SignUpForm() {
   const router = useRouter()
-  const supabase = createClient()
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -44,19 +43,15 @@ export function SignUpForm() {
     setLoading(true)
     setError(null)
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`,
-        data: {
-          name: data.name || null,
-        },
-      },
-    })
+    const formData = new FormData()
+    formData.set('name', data.name)
+    formData.set('email', data.email)
+    formData.set('password', data.password)
 
-    if (signUpError) {
-      setError(signUpError.message)
+    const result = await signUpAction(formData)
+
+    if (result?.error) {
+      setError(result.error)
     } else {
       setSuccess(true)
     }

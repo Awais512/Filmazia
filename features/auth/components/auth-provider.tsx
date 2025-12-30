@@ -2,6 +2,9 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { getFavoritesAction } from '@/features/favorites/actions';
+import { getWatchlistAction } from '@/features/watchlist/actions';
+import { useFavoritesStore, useWatchlistStore } from '@/store';
 import { createClient } from '@/features/auth/utils/supabase-client';
 
 interface AuthContextType {
@@ -20,6 +23,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const setFavoritesFromServer = useFavoritesStore((state) => state.setFromServer);
+  const setWatchlistFromServer = useWatchlistStore((state) => state.setFromServer);
 
   useEffect(() => {
     const {
@@ -39,6 +44,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, [supabase]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    const sync = async () => {
+      try {
+        const [favoritesData, watchlistData] = await Promise.all([
+          getFavoritesAction(),
+          getWatchlistAction(),
+        ]);
+        if (cancelled) return;
+        setFavoritesFromServer(favoritesData.items, favoritesData.folders);
+        setWatchlistFromServer(watchlistData);
+      } catch {
+        return;
+      }
+    };
+
+    sync();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, setFavoritesFromServer, setWatchlistFromServer]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
