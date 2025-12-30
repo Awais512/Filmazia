@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -20,14 +20,19 @@ interface TVShowCardPosterProps {
 }
 
 export default function TVShowCardPoster({ show, priority = false, className, user }: TVShowCardPosterProps) {
+  const [hydrated, setHydrated] = useState(false)
   const [imageError, setImageError] = useState(false)
   const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore()
   const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore()
   const [showActions, setShowActions] = useState(false)
   const { user: authUser, loading: authLoading } = useAuth()
 
-  const inWatchlist = isInWatchlist(show.id)
-  const isFav = isFavorite(show.id)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+
+  const inWatchlist = hydrated && isInWatchlist(show.id)
+  const isFav = hydrated && isFavorite(show.id)
   const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', 'medium')
   const year = show.first_air_date ? new Date(show.first_air_date).getFullYear() : ''
   const currentUser = user ?? authUser

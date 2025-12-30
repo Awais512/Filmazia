@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -19,6 +19,7 @@ interface TVShowHeroProps {
 }
 
 export default function TVShowHero({ show, user }: TVShowHeroProps) {
+  const [hydrated, setHydrated] = useState(false)
   const [showActions, setShowActions] = useState(false)
   const [showTrailerModal, setShowTrailerModal] = useState(false)
   const backdropUrl = tmdb.getImageUrl(show.backdrop_path, 'backdrop', 'large')
@@ -28,8 +29,12 @@ export default function TVShowHero({ show, user }: TVShowHeroProps) {
   const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore()
   const { user: authUser, loading: authLoading } = useAuth()
 
-  const inWatchlist = isInWatchlist(show.id)
-  const isFav = isFavorite(show.id)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+
+  const inWatchlist = hydrated && isInWatchlist(show.id)
+  const isFav = hydrated && isFavorite(show.id)
   const currentUser = user ?? authUser
 
   // Find trailer video
@@ -165,7 +170,8 @@ export default function TVShowHero({ show, user }: TVShowHeroProps) {
                   size="lg"
                   className="gap-2"
                   onClick={() => {
-                    if (!user) {
+                    if (!currentUser) {
+                      if (authLoading) return
                       window.location.href = '/auth/sign-in'
                       return
                     }

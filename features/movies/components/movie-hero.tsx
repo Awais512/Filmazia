@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -20,13 +20,18 @@ interface MovieHeroProps {
 }
 
 export default function MovieHero({ movie, user }: MovieHeroProps) {
+  const [hydrated, setHydrated] = useState(false)
   const [showTrailerModal, setShowTrailerModal] = useState(false)
   const { isInWatchlist, add: addToWatchlist, remove: removeFromWatchlist } = useWatchlistStore()
   const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore()
   const { user: authUser, loading: authLoading } = useAuth()
 
-  const inWatchlist = isInWatchlist(movie.id)
-  const isFav = isFavorite(movie.id)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+
+  const inWatchlist = hydrated && isInWatchlist(movie.id)
+  const isFav = hydrated && isFavorite(movie.id)
   const backdropUrl = tmdb.getImageUrl(movie.backdrop_path, 'backdrop', 'large')
   const currentUser = user ?? authUser
 
@@ -233,7 +238,8 @@ export default function MovieHero({ movie, user }: MovieHeroProps) {
                 size="lg"
                 className="gap-2"
                 onClick={() => {
-                  if (!user) {
+                  if (!currentUser) {
+                    if (authLoading) return
                     window.location.href = '/auth/sign-in'
                     return
                   }

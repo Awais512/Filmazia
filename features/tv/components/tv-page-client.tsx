@@ -87,7 +87,7 @@ export function TVClient({
       const updatedFilters = { ...filters, ...newFilters };
 
       // Update URL params
-      if (updatedFilters.genre !== undefined) {
+      if (Object.prototype.hasOwnProperty.call(newFilters, 'genre')) {
         if (updatedFilters.genre) {
           params.set('genre', String(updatedFilters.genre));
         } else {
@@ -95,7 +95,7 @@ export function TVClient({
         }
       }
 
-      if (updatedFilters.year !== undefined) {
+      if (Object.prototype.hasOwnProperty.call(newFilters, 'year')) {
         if (updatedFilters.year) {
           params.set('year', String(updatedFilters.year));
         } else {
@@ -103,7 +103,7 @@ export function TVClient({
         }
       }
 
-      if (updatedFilters.provider !== undefined) {
+      if (Object.prototype.hasOwnProperty.call(newFilters, 'provider')) {
         if (updatedFilters.provider) {
           params.set('provider', String(updatedFilters.provider));
         } else {
