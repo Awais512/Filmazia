@@ -3,12 +3,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Grid3X3, List } from 'lucide-react';
 import { TVShowCardPoster } from '@/features/tv';
+import { TVShowCardList } from '@/features/tv/components/tvshow-card-list';
 import { MovieGridSkeleton, Pagination, EmptyState, Select } from '@/shared/ui';
 import { ITEMS_PER_PAGE } from '@/shared/config';
 import { TVShow, TVShowResponse, Genre } from '@/shared/tmdb/types';
 import { Provider } from '@/shared/tmdb/types';
 import { getTVShows } from '@/app/actions';
+import { useSettingsStore } from '@/store';
 
 interface TVClientProps {
   initialShows: TVShow[];
@@ -34,6 +37,7 @@ export function TVClient({
 }: TVClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { viewMode, setSettings } = useSettingsStore();
 
   const [shows, setShows] = useState<TVShow[]>(initialShows);
   const [loading, setLoading] = useState(false);
@@ -165,7 +169,32 @@ export function TVClient({
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap items-end gap-4">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-cinematic-dark border border-cinematic-gray rounded-lg p-1">
+            <button
+              onClick={() => setSettings({ viewMode: 'grid' })}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-accent-amber text-cinematic-black'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              aria-label="Grid view"
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setSettings({ viewMode: 'list' })}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-accent-amber text-cinematic-black'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              aria-label="List view"
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
           <div className="w-full sm:w-auto">
             <Select
               label="Genre"
@@ -226,18 +255,33 @@ export function TVClient({
           <MovieGridSkeleton count={ITEMS_PER_PAGE} />
         ) : shows.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-              {shows.map((show, index) => (
-                <motion.div
-                  key={show.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <TVShowCardPoster show={show} />
-                </motion.div>
-              ))}
-            </div>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                {shows.map((show, index) => (
+                  <motion.div
+                    key={show.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <TVShowCardPoster show={show} />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {shows.map((show, index) => (
+                  <motion.div
+                    key={show.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <TVShowCardList show={show} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
 
             {totalPages > 1 && (
               <Pagination

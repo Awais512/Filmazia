@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { Star, Bookmark, Heart, Plus } from 'lucide-react'
 import { TVShow } from '@/shared/tmdb/types'
 import { tmdb } from '@/shared/tmdb/api'
-import { useWatchlistStore, useFavoritesStore } from '@/store'
+import { useWatchlistStore, useFavoritesStore, useSettingsStore } from '@/store'
 import { cn, getRatingColor } from '@/shared/utils'
 import { User } from '@supabase/supabase-js'
 import { useAuth } from '@/features/auth/components/auth-provider'
@@ -26,6 +26,7 @@ export default function TVShowCardPoster({ show, priority = false, className, us
   const { isFavorite, add: addToFavorites, remove: removeFromFavorites } = useFavoritesStore()
   const [showActions, setShowActions] = useState(false)
   const { user: authUser, loading: authLoading } = useAuth()
+  const { posterQuality, showRatings, showReleaseYear } = useSettingsStore()
 
   useEffect(() => {
     setHydrated(true)
@@ -33,7 +34,16 @@ export default function TVShowCardPoster({ show, priority = false, className, us
 
   const inWatchlist = hydrated && isInWatchlist(show.id)
   const isFav = hydrated && isFavorite(show.id)
-  const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', 'medium')
+
+  const qualityMap = {
+    low: 'small' as const,
+    medium: 'medium' as const,
+    high: 'large' as const,
+  }
+  const size = qualityMap[posterQuality]
+  const quality = posterQuality === 'low' ? 40 : posterQuality === 'high' ? 80 : 60
+
+  const posterUrl = tmdb.getImageUrl(show.poster_path, 'poster', size)
   const year = show.first_air_date ? new Date(show.first_air_date).getFullYear() : ''
   const currentUser = authLoading ? user ?? authUser : authUser
 
@@ -84,7 +94,7 @@ export default function TVShowCardPoster({ show, priority = false, className, us
               alt={show.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-              quality={60}
+              quality={quality}
               className="object-cover transition-transform duration-500 group-hover:scale-110"
               priority={priority}
               onError={() => setImageError(true)}
@@ -99,10 +109,12 @@ export default function TVShowCardPoster({ show, priority = false, className, us
           <div className="absolute inset-0 bg-gradient-to-t from-cinematic-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
           {/* Rating badge */}
-          <div className="absolute top-2 right-2 bg-cinematic-black/80 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center gap-1">
-            <Star className={cn('w-3 h-3', getRatingColor(show.vote_average))} fill="currentColor" />
-            <span className="text-xs font-medium text-white">{show.vote_average.toFixed(1)}</span>
-          </div>
+          {showRatings && (
+            <div className="absolute top-2 right-2 bg-cinematic-black/80 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center gap-1">
+              <Star className={cn('w-3 h-3', getRatingColor(show.vote_average))} fill="currentColor" />
+              <span className="text-xs font-medium text-white">{show.vote_average.toFixed(1)}</span>
+            </div>
+          )}
 
           {/* Quick actions */}
           <motion.div
@@ -141,7 +153,7 @@ export default function TVShowCardPoster({ show, priority = false, className, us
           <h3 className="font-medium text-white group-hover:text-accent-amber transition-colors line-clamp-1">
             {show.name}
           </h3>
-          <p className="text-sm text-gray-500">{year}</p>
+          {showReleaseYear && <p className="text-sm text-gray-500">{year}</p>}
         </div>
       </Link>
     </motion.div>

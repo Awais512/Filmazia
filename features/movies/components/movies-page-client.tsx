@@ -3,11 +3,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Grid3X3, List } from 'lucide-react';
 import { MovieCardPoster } from '@/features/movies';
+import { MovieCardList } from '@/features/movies/components/movie-card-list';
 import { MovieGridSkeleton, Pagination, EmptyState, Select } from '@/shared/ui';
 import { GENRES, SORT_OPTIONS, ITEMS_PER_PAGE } from '@/shared/config';
 import { Movie, Genre } from '@/shared/tmdb/types';
 import { getMovies } from '@/app/actions';
+import { useSettingsStore } from '@/store';
 
 interface MoviesClientProps {
   initialMovies: Movie[];
@@ -30,6 +33,7 @@ export function MoviesClient({
 }: MoviesClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { viewMode, setSettings } = useSettingsStore();
 
   const [movies, setMovies] = useState<Movie[]>(initialMovies);
   const [loading, setLoading] = useState(false);
@@ -148,7 +152,32 @@ export function MoviesClient({
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap items-end gap-4">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-cinematic-dark border border-cinematic-gray rounded-lg p-1">
+            <button
+              onClick={() => setSettings({ viewMode: 'grid' })}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-accent-amber text-cinematic-black'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              aria-label="Grid view"
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setSettings({ viewMode: 'list' })}
+              className={`p-2 rounded-md transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-accent-amber text-cinematic-black'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              aria-label="List view"
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
           <div className="w-full sm:w-auto">
             <Select
               label="Genre"
@@ -192,18 +221,33 @@ export function MoviesClient({
           <MovieGridSkeleton count={ITEMS_PER_PAGE} />
         ) : movies.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-              {movies.map((movie, index) => (
-                <motion.div
-                  key={movie.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <MovieCardPoster movie={movie} />
-                </motion.div>
-              ))}
-            </div>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                {movies.map((movie, index) => (
+                  <motion.div
+                    key={movie.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <MovieCardPoster movie={movie} />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {movies.map((movie, index) => (
+                  <motion.div
+                    key={movie.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <MovieCardList movie={movie} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
 
             {totalPages > 1 && (
               <Pagination

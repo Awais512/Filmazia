@@ -5,8 +5,8 @@ import Image from 'next/image'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Film, LogOut, Settings } from 'lucide-react'
-import { useUIStore } from '@/store'
+import { Search, Menu, X, Film, LogOut, Settings, Bell } from 'lucide-react'
+import { useUIStore, useNotificationsStore } from '@/store'
 import { SearchBar } from '@/features/search'
 import { signOutAction } from '@/features/auth/actions'
 import { useAuth } from '@/features/auth/components/auth-provider'
@@ -33,9 +33,12 @@ const getInitials = (name: string): string => {
 
 export function HeaderClient({ user }: HeaderClientProps) {
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore()
+  const { unreadCount, notifications, markAsRead, clearAll } = useNotificationsStore()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const notificationRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { signOut } = useAuth()
 
@@ -60,16 +63,19 @@ export function HeaderClient({ user }: HeaderClientProps) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false)
+      }
     }
 
-    if (showUserMenu) {
+    if (showUserMenu || showNotifications) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showUserMenu])
+  }, [showUserMenu, showNotifications])
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -129,6 +135,77 @@ export function HeaderClient({ user }: HeaderClientProps) {
           {/* Search & Auth */}
           <div className="flex items-center gap-4">
             <SearchBar />
+
+            {user && (
+              /* Notifications Bell */
+              <div className="relative" ref={notificationRef}>
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 text-gray-300 hover:text-accent-amber transition-colors rounded-lg"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {showNotifications && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-3 w-80 bg-cinematic-dark border border-cinematic-gray rounded-2xl shadow-2xl overflow-hidden"
+                    >
+                      <div className="p-4 border-b border-cinematic-gray flex items-center justify-between">
+                        <h3 className="text-white font-medium">Notifications</h3>
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={() => clearAll()}
+                            className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+                          >
+                            Clear All
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="p-8 text-center text-gray-500 text-sm">
+                            No notifications yet
+                          </div>
+                        ) : (
+                          notifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`p-4 border-b border-cinematic-gray/50 hover:bg-cinematic-gray/30 transition-colors cursor-pointer ${
+                                !notification.isRead ? 'bg-cinematic-gray/10' : ''
+                              }`}
+                              onClick={() => {
+                                if (!notification.isRead) {
+                                  markAsRead(notification.id)
+                                }
+                              }}
+                            >
+                              <p className="text-white text-sm font-medium">
+                                {notification.title}
+                              </p>
+                              <p className="text-gray-400 text-xs mt-1">
+                                {notification.message}
+                              </p>
+                              <p className="text-gray-500 text-xs mt-2">
+                                {new Date(notification.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {user ? (
               /* User Menu */
