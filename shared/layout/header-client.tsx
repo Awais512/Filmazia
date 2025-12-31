@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, Film, User, LogOut, Settings } from 'lucide-react'
+import { Search, Menu, X, Film, LogOut, Settings } from 'lucide-react'
 import { useUIStore } from '@/store'
 import { SearchBar } from '@/features/search'
 import { signOutAction } from '@/features/auth/actions'
@@ -71,15 +71,16 @@ export function HeaderClient({ user }: HeaderClientProps) {
     }
   }, [showUserMenu])
 
-  const publicNavLinks = [
+  const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/movies', label: 'Movies' },
     { href: '/tv', label: 'TV Shows' },
-  ]
-
-  const protectedNavLinks = [
     { href: '/watchlist', label: 'Watchlist' },
     { href: '/favorites', label: 'Favorites' },
+  ]
+
+  const authNavLinks = [
+    { href: '/profile', label: 'Profile' },
   ]
 
   const handleSignOut = async () => {
@@ -102,8 +103,8 @@ export function HeaderClient({ user }: HeaderClientProps) {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            {publicNavLinks.map((link) => (
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -113,7 +114,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent-amber transition-all group-hover:w-full" />
               </Link>
             ))}
-            {user && protectedNavLinks.map((link) => (
+            {user && authNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -194,14 +195,6 @@ export function HeaderClient({ user }: HeaderClientProps) {
                       {/* Menu Actions */}
                       <div className="p-2">
                         <Link
-                          href="/profile"
-                          onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray rounded-xl transition-colors"
-                        >
-                          <User className="w-4 h-4" />
-                          Profile
-                        </Link>
-                        <Link
                           href="/settings"
                           onClick={() => setShowUserMenu(false)}
                           className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-accent-amber hover:bg-cinematic-gray rounded-xl transition-colors"
@@ -253,7 +246,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
             className="md:hidden bg-cinematic-dark border-t border-cinematic-gray"
           >
             <nav className="flex flex-col p-4 space-y-2">
-              {publicNavLinks.map((link) => (
+              {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -263,7 +256,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                   {link.label}
                 </Link>
               ))}
-              {user && protectedNavLinks.map((link) => (
+              {user && authNavLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

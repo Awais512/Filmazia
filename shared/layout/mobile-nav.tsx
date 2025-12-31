@@ -35,12 +35,6 @@ export default function MobileNav() {
             >
               <item.icon className="w-5 h-5" />
               <span className="text-xs mt-1">{item.label}</span>
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-accent-amber"
-                />
-              )}
             </Link>
           );
         })}
