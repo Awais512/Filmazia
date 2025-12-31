@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.9",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
     "clsx": "^2.1.1",

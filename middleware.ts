@@ -2,6 +2,19 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Skip Supabase auth check for completely public routes (early return)
+  const publicRoutes = ['/', '/movies', '/tv', '/search'];
+  const isPublicRoute =
+    publicRoutes.includes(pathname) ||
+    pathname.startsWith('/movies/') ||
+    pathname.startsWith('/tv/');
+
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -41,20 +54,20 @@ export async function middleware(request: NextRequest) {
   const protectedRoutes = ['/profile', '/settings', '/watchlist', '/favorites'];
 
   const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
+    pathname.startsWith(route)
   );
 
   // Redirect to sign in if accessing protected route without authentication
   if (isProtectedRoute && !user) {
     const redirectUrl = new URL('/auth/sign-in', request.url);
-    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+    redirectUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
   // Redirect to home if already authenticated and accessing auth pages
   if (
-    request.nextUrl.pathname.startsWith('/auth/sign-in') ||
-    request.nextUrl.pathname.startsWith('/auth/sign-up')
+    pathname.startsWith('/auth/sign-in') ||
+    pathname.startsWith('/auth/sign-up')
   ) {
     if (user) {
       return NextResponse.redirect(new URL('/', request.url));
@@ -73,6 +86,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|.*\\..*).*)',
   ],
 };

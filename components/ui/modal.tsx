@@ -1,9 +1,9 @@
 'use client';
 
-import { Fragment, ReactNode } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils';
 
 interface ModalProps {
   isOpen: boolean;
@@ -22,42 +22,35 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
   };
 
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-        </Transition.Child>
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            onClick={onClose}
+          />
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel
+          {/* Modal */}
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
                 className={cn(
-                  'w-full transform overflow-hidden rounded-2xl bg-cinematic-dark border border-cinematic-gray p-6 shadow-xl transition-all',
+                  'w-full transform overflow-hidden rounded-2xl bg-cinematic-dark border border-cinematic-gray p-6 shadow-xl',
                   sizes[size]
                 )}
               >
                 {title && (
                   <div className="flex items-center justify-between mb-4">
-                    <Dialog.Title className="text-lg font-medium text-white">
-                      {title}
-                    </Dialog.Title>
+                    <h3 className="text-lg font-medium text-white">{title}</h3>
                     <button
                       onClick={onClose}
                       className="text-gray-400 hover:text-white transition-colors"
@@ -67,11 +60,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
                   </div>
                 )}
                 {children}
-              </Dialog.Panel>
-            </Transition.Child>
+              </motion.div>
+            </div>
           </div>
-        </div>
-      </Dialog>
-    </Transition>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
