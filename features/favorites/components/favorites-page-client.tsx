@@ -6,17 +6,21 @@ import { motion } from 'framer-motion';
 import { useFavoritesStore } from '@/store';
 import { MovieCardPoster } from '@/features/movies';
 import { TVShowCardPoster } from '@/features/tv';
-import { MovieGridSkeleton, EmptyState, Button } from '@/shared/ui';
+import { MovieGridSkeleton, EmptyState, Pagination, Select, Button } from '@/shared/ui';
 import { Movie, TVShow } from '@/shared/tmdb/types';
+import { ITEMS_PER_PAGE } from '@/shared/config';
 import { getFavoritesContent } from '@/app/actions';
 
 export function FavoritesClient() {
   const store = useFavoritesStore();
   const [items, setItems] = useState<(Movie | TVShow)[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'date' | 'rating'>('date');
 
   // Memoize to prevent new array reference on each render
   const favoriteItems = useMemo(() => Object.values(store.items), [store.items]);
+  const totalPages = Math.ceil(favoriteItems.length / ITEMS_PER_PAGE);
 
   // Fetch items using optimized server action
   useEffect(() => {
@@ -28,10 +32,12 @@ export function FavoritesClient() {
       setLoading(true);
 
       try {
-        const itemsToFetch = favoriteItems.map((item) => ({
-          id: item.id,
-          type: (item.type || 'movie') as 'movie' | 'tv',
-        }));
+        const itemsToFetch = favoriteItems
+          .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+          .map((item) => ({
+            id: item.id,
+            type: (item.type || 'movie') as 'movie' | 'tv',
+          }));
 
         if (itemsToFetch.length === 0) {
           if (!cancelled) {
@@ -44,8 +50,19 @@ export function FavoritesClient() {
         const { movies, tvShows } = await getFavoritesContent(itemsToFetch);
 
         if (!cancelled) {
-          // Combine movies and TV shows
+          // Combine and sort
           const fetchedItems: (Movie | TVShow)[] = [...movies, ...tvShows];
+
+          if (sortBy === 'date') {
+            fetchedItems.sort((a, b) => {
+              const dateA = 'release_date' in a ? a.release_date : a.first_air_date;
+              const dateB = 'release_date' in b ? b.release_date : b.first_air_date;
+              return new Date(dateB || '').getTime() - new Date(dateA || '').getTime();
+            });
+          } else {
+            fetchedItems.sort((a, b) => b.vote_average - a.vote_average);
+          }
+
           setItems(fetchedItems);
         }
       } finally {
@@ -60,7 +77,7 @@ export function FavoritesClient() {
     return () => {
       cancelled = true;
     };
-  }, [favoriteItems.length]);
+  }, [favoriteItems.length, page, sortBy]);
 
   const handleRemove = (id: number) => {
     store.remove(id);
@@ -103,12 +120,21 @@ export function FavoritesClient() {
               {favoriteItems.length} items favorited
             </p>
           </div>
-          <div />
+          <Select
+            options={[
+              { value: 'date', label: 'Added Date' },
+              { value: 'rating', label: 'Rating' },
+            ]}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'date' | 'rating')}
+            className="w-40"
+          />
         </div>
 
         {loading ? (
-          <MovieGridSkeleton count={Math.max(favoriteItems.length, 10)} />
-        ) : items.length > 0 ? (
+          <MovieGridSkeleton count={Math.min(favoriteItems.length, ITEMS_PER_PAGE)} />
+        ) : (
+          <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
             {items.map((item, index) => (
               <motion.div
@@ -132,8 +158,16 @@ export function FavoritesClient() {
               </motion.div>
             ))}
           </div>
-        ) : (
-          <EmptyState type="favorites" />
+
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                className="mt-12"
+              />
+            )}
+          </>
         )}
       </motion.div>
 
