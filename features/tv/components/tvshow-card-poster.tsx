@@ -84,6 +84,7 @@ export default function TVShowCardPoster({ show, priority = false, className, us
               alt={show.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              quality={60}
               className="object-cover transition-transform duration-500 group-hover:scale-110"
               priority={priority}
               onError={() => setImageError(true)}

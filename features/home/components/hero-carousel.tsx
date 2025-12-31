@@ -80,6 +80,8 @@ export default function HeroCarousel() {
               src={backdropUrl}
               alt={currentMovie.title}
               fill
+              sizes="100vw"
+              quality={80}
               className="object-cover"
               priority
             />
