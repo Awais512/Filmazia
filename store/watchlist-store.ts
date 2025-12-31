@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Movie, TVShow, WatchlistItem } from '@/lib/tmdb-types';
 
 type WatchlistEntry = WatchlistItem & {
@@ -19,8 +20,10 @@ interface WatchlistState {
   clear: () => void;
 }
 
-export const useWatchlistStore = create<WatchlistState>()((set, get) => ({
-  items: {},
+export const useWatchlistStore = create<WatchlistState>()(
+  persist(
+    (set, get) => ({
+      items: {},
 
       add: (item, type) => {
         set((state) => ({
@@ -69,7 +72,13 @@ export const useWatchlistStore = create<WatchlistState>()((set, get) => ({
 
       getAll: () => Object.values(get().items),
 
-  clear: () => {
-    set({ items: {} });
-  },
-}));
+      clear: () => {
+        set({ items: {} });
+      },
+    }),
+    {
+      name: 'filmazia-watchlist',
+      partialize: (state) => ({ items: state.items }),
+    }
+  )
+);

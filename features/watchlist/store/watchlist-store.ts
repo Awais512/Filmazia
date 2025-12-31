@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Movie, TVShow, WatchlistItem } from '@/shared/tmdb/types';
 import { supabase } from '@/features/auth/utils/supabase-client';
 import {
@@ -27,6 +28,7 @@ interface WatchlistState {
   isWatched: (id: number) => boolean;
   getAll: () => WatchlistEntry[];
   clear: () => void;
+  clearMemoryOnly: () => void; // Only clears memory, not localStorage
   setFromServer: (items: WatchlistEntry[]) => void;
 }
 
@@ -42,8 +44,10 @@ const syncIfAuthenticated = async (action: () => Promise<void>) => {
   }
 };
 
-export const useWatchlistStore = create<WatchlistState>()((set, get) => ({
-  items: {},
+export const useWatchlistStore = create<WatchlistState>()(
+  persist(
+    (set, get) => ({
+      items: {},
 
       add: (item, type) => {
         set((state) => ({
@@ -112,11 +116,21 @@ export const useWatchlistStore = create<WatchlistState>()((set, get) => ({
         void syncIfAuthenticated(() => clearWatchlistAction());
       },
 
-  setFromServer: (items) => {
-    const nextItems: Record<number, WatchlistEntry> = {};
-    for (const item of items) {
-      nextItems[item.id] = item;
+      clearMemoryOnly: () => {
+        set({ items: {} });
+      },
+
+      setFromServer: (items) => {
+        const nextItems: Record<number, WatchlistEntry> = {};
+        for (const item of items) {
+          nextItems[item.id] = item;
+        }
+        set({ items: nextItems });
+      },
+    }),
+    {
+      name: 'filmazia-watchlist',
+      partialize: (state) => ({ items: state.items }),
     }
-    set({ items: nextItems });
-  },
-}));
+  )
+);

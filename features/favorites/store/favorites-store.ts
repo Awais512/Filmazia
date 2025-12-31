@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Movie, TVShow } from '@/shared/tmdb/types';
 import { supabase } from '@/features/auth/utils/supabase-client';
 import {
@@ -24,6 +25,7 @@ interface FavoritesState {
   isFavorite: (id: number) => boolean;
   getAll: () => FavoriteEntry[];
   clear: () => void;
+  clearMemoryOnly: () => void; // Only clears memory, not localStorage
   setFromServer: (items: FavoriteEntry[]) => void;
 }
 
@@ -39,57 +41,69 @@ const syncIfAuthenticated = async (action: () => Promise<void>) => {
   }
 };
 
-export const useFavoritesStore = create<FavoritesState>()((set, get) => ({
-  items: {},
+export const useFavoritesStore = create<FavoritesState>()(
+  persist(
+    (set, get) => ({
+      items: {},
 
-  add: (item, type) => {
-    set((state) => ({
-      items: {
-        ...state.items,
-        [item.id]: {
-          id: item.id,
-          addedAt: new Date().toISOString(),
-          type,
-          title: 'title' in item ? item.title : item.name,
-          poster_path: item.poster_path,
-        },
+      add: (item, type) => {
+        set((state) => ({
+          items: {
+            ...state.items,
+            [item.id]: {
+              id: item.id,
+              addedAt: new Date().toISOString(),
+              type,
+              title: 'title' in item ? item.title : item.name,
+              poster_path: item.poster_path,
+            },
+          },
+        }));
+
+        void syncIfAuthenticated(() =>
+          addFavoriteAction({
+            id: item.id,
+            type,
+            title: 'title' in item ? item.title : item.name,
+            poster_path: item.poster_path,
+          })
+        );
       },
-    }));
 
-    void syncIfAuthenticated(() =>
-      addFavoriteAction({
-        id: item.id,
-        type,
-        title: 'title' in item ? item.title : item.name,
-        poster_path: item.poster_path,
-      })
-    );
-  },
+      remove: (id) => {
+        set((state) => {
+          const { [id]: removed, ...rest } = state.items;
+          return { items: rest };
+        });
 
-  remove: (id) => {
-    set((state) => {
-      const { [id]: removed, ...rest } = state.items;
-      return { items: rest };
-    });
+        void syncIfAuthenticated(() => removeFavoriteAction({ id }));
+      },
 
-    void syncIfAuthenticated(() => removeFavoriteAction({ id }));
-  },
+      isFavorite: (id) => id in get().items,
 
-  isFavorite: (id) => id in get().items,
+      getAll: () => Object.values(get().items),
 
-  getAll: () => Object.values(get().items),
+      clear: () => {
+        set({ items: {} });
+        void syncIfAuthenticated(() => clearFavoritesAction());
+      },
 
-  clear: () => {
-    set({ items: {} });
-    void syncIfAuthenticated(() => clearFavoritesAction());
-  },
+      clearMemoryOnly: () => {
+        set({ items: {} });
+      },
 
-  setFromServer: (items) => {
-    const nextItems: Record<number, FavoriteEntry> = {};
-    for (const item of items) {
-      nextItems[item.id] = item;
+      setFromServer: (items) => {
+        const nextItems: Record<number, FavoriteEntry> = {};
+        for (const item of items) {
+          nextItems[item.id] = item;
+        }
+
+        set({ items: nextItems });
+      },
+    }),
+    {
+      name: 'filmazia-favorites',
+      partialize: (state) => ({ items: state.items }),
     }
-
-    set({ items: nextItems });
-  },
-}));
+  )
+);
