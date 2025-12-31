@@ -34,9 +34,20 @@ const getInitials = (name: string): string => {
 export function HeaderClient({ user }: HeaderClientProps) {
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { signOut } = useAuth()
+
+  // Track scroll position to show/hide border
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Memoize user display info
   const userDisplayName = useMemo(() => user ? getUserDisplayName(user) : '', [user])
@@ -79,7 +90,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-cinematic-black/80 backdrop-blur-md border-b border-cinematic-gray">
+    <header className={`fixed top-0 left-0 right-0 z-40 bg-cinematic-black/80 backdrop-blur-md transition-colors duration-200 ${isScrolled ? 'border-b border-cinematic-gray' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}

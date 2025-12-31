@@ -133,7 +133,6 @@ export function ProfileClient() {
           </div>
           <div className="flex gap-3">
             <Button
-              variant="outline"
               onClick={handleExportData}
               className="gap-2"
             >
