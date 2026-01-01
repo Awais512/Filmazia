@@ -29,5 +29,5 @@ export async function GET(request: NextRequest) {
   }
 
   // URL to redirect to after confirmation
-  return NextResponse.redirect(new URL('/profile', request.url))
+  return NextResponse.redirect(new URL('/', request.url))
 }
