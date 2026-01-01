@@ -7,6 +7,10 @@ const nextConfig = {
         hostname: 'image.tmdb.org',
         pathname: '/t/p/**',
       },
+      {
+        protocol: 'https',
+        hostname: '**.googleusercontent.com',
+      },
     ],
     // Cache remote images for 1 day (in seconds)
     minimumCacheTTL: 60 * 60 * 24,

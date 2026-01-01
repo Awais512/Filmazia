@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { Eye, EyeOff, ArrowRight, Mail, Lock } from 'lucide-react'
 import { signInAction } from '@/features/auth/actions'
+import { googleSignInAction } from '@/features/auth/actions/google-sign-in-action'
 import { supabase } from '@/features/auth/utils/supabase-client'
 import { Button } from '@/shared/ui'
 
@@ -180,7 +181,15 @@ export function SignInForm({ redirectTo }: SignInFormProps) {
 
       {/* Social Sign In */}
       <div className="grid grid-cols-2 gap-4">
-        <button className="flex items-center justify-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all">
+        <button
+          onClick={async () => {
+            setLoading(true)
+            // The action will redirect to Google OAuth
+            googleSignInAction()
+          }}
+          disabled={loading}
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
               fill="currentColor"
