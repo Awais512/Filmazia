@@ -3,7 +3,6 @@ import {
   integer,
   pgTable,
   primaryKey,
-  serial,
   text,
   timestamp,
   uuid,
@@ -74,10 +73,6 @@ export const userPreferences = pgTable('user_preferences', {
   viewMode: text('view_mode').default('grid'),
   showRatings: boolean('show_ratings').default(true).notNull(),
   showReleaseYear: boolean('show_release_year').default(true).notNull(),
-  // Notification preferences
-  genreAlertsEnabled: boolean('genre_alerts_enabled').default(false).notNull(),
-  favoriteGenres: text('favorite_genres').array(),
-  watchlistReminders: boolean('watchlist_reminders').default(false).notNull(),
   // Privacy preferences
   privateProfile: boolean('private_profile').default(false).notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
@@ -85,23 +80,5 @@ export const userPreferences = pgTable('user_preferences', {
     .notNull(),
 });
 
-export const notifications = pgTable('notifications', {
-  id: serial('id').primaryKey(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  type: text('type').notNull(),
-  title: text('title').notNull(),
-  message: text('message').notNull(),
-  itemId: integer('item_id'),
-  itemType: text('item_type'),
-  isRead: boolean('is_read').default(false).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
 export type UserPreference = typeof userPreferences.$inferSelect;
 export type NewUserPreference = typeof userPreferences.$inferInsert;
-export type Notification = typeof notifications.$inferSelect;
-export type NewNotification = typeof notifications.$inferInsert;

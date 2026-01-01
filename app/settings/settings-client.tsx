@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Bell, Shield, Trash2, Check } from 'lucide-react';
+import { Settings, Shield, Trash2, Check } from 'lucide-react';
 import { useSettingsStore } from '@/store';
 import type { PosterQuality, ViewMode } from '@/store';
 import {
   getPreferencesAction,
   updatePreferencesAction,
 } from '@/features/settings/actions';
-import { GENRES } from '@/shared/config/constants';
 import { cn } from '@/shared/utils';
 import { Button } from '@/components/ui/button';
 
@@ -17,7 +16,7 @@ interface SettingsClientProps {
   userId: string;
 }
 
-type Section = 'content' | 'notifications' | 'privacy';
+type Section = 'content' | 'privacy';
 
 export function SettingsClient({ userId }: SettingsClientProps) {
   const [activeSection, setActiveSection] = useState<Section>('content');
@@ -30,9 +29,6 @@ export function SettingsClient({ userId }: SettingsClientProps) {
     viewMode,
     showRatings,
     showReleaseYear,
-    genreAlertsEnabled,
-    favoriteGenres,
-    watchlistReminders,
     privateProfile,
     setSettings,
     setFromServer: setSettingsFromServer,
@@ -58,9 +54,6 @@ export function SettingsClient({ userId }: SettingsClientProps) {
       viewMode,
       showRatings,
       showReleaseYear,
-      genreAlertsEnabled,
-      favoriteGenres,
-      watchlistReminders,
       privateProfile,
     });
 
@@ -71,22 +64,8 @@ export function SettingsClient({ userId }: SettingsClientProps) {
     }
   };
 
-  const toggleGenre = (genreId: number) => {
-    const current = favoriteGenres || [];
-    if (current.includes(genreId)) {
-      setSettings({
-        favoriteGenres: current.filter((id) => id !== genreId),
-      });
-    } else {
-      setSettings({
-        favoriteGenres: [...current, genreId],
-      });
-    }
-  };
-
   const sections = [
     { id: 'content' as Section, label: 'Content', icon: Settings },
-    { id: 'notifications' as Section, label: 'Notifications', icon: Bell },
     { id: 'privacy' as Section, label: 'Privacy & Data', icon: Shield },
   ];
 
@@ -251,96 +230,6 @@ export function SettingsClient({ userId }: SettingsClientProps) {
                         className={cn(
                           'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
                           showReleaseYear ? 'left-7' : 'left-1'
-                        )}
-                      />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Notifications Section */}
-              {activeSection === 'notifications' && (
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold text-white">
-                    Notifications
-                  </h2>
-
-                  {/* Genre Alerts */}
-                  <div className="flex items-center justify-between py-3 border-t border-cinematic-gray">
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        Genre Alerts
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Get notified about new content in your favorite genres
-                      </p>
-                    </div>
-                    <button
-                      onClick={() =>
-                        setSettings({ genreAlertsEnabled: !genreAlertsEnabled })
-                      }
-                      className={cn(
-                        'relative w-12 h-6 rounded-full transition-colors',
-                        genreAlertsEnabled ? 'bg-accent-amber' : 'bg-cinematic-gray'
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
-                          genreAlertsEnabled ? 'left-7' : 'left-1'
-                        )}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Favorite Genres Selection */}
-                  {genreAlertsEnabled && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Favorite Genres
-                      </label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {GENRES.map((genre) => (
-                          <button
-                            key={genre.id}
-                            onClick={() => toggleGenre(genre.id)}
-                            className={cn(
-                              'px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left',
-                              (favoriteGenres || []).includes(genre.id)
-                                ? 'bg-accent-amber text-cinematic-black'
-                                : 'bg-cinematic-black text-gray-400 hover:bg-cinematic-gray'
-                            )}
-                          >
-                            {genre.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Watchlist Reminders */}
-                  <div className="flex items-center justify-between py-3 border-t border-cinematic-gray">
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        Watchlist Reminders
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Receive reminders for items in your watchlist
-                      </p>
-                    </div>
-                    <button
-                      onClick={() =>
-                        setSettings({ watchlistReminders: !watchlistReminders })
-                      }
-                      className={cn(
-                        'relative w-12 h-6 rounded-full transition-colors',
-                        watchlistReminders ? 'bg-accent-amber' : 'bg-cinematic-gray'
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
-                          watchlistReminders ? 'left-7' : 'left-1'
                         )}
                       />
                     </button>

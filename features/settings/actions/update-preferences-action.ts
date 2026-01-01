@@ -10,9 +10,6 @@ export interface UpdatePreferencesData {
   viewMode?: string;
   showRatings?: boolean;
   showReleaseYear?: boolean;
-  genreAlertsEnabled?: boolean;
-  favoriteGenres?: number[];
-  watchlistReminders?: boolean;
   privateProfile?: boolean;
 }
 

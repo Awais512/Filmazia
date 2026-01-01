@@ -10,9 +10,6 @@ export interface UserPreferencesData {
   viewMode: string | null;
   showRatings: boolean;
   showReleaseYear: boolean;
-  genreAlertsEnabled: boolean;
-  favoriteGenres: number[] | null;
-  watchlistReminders: boolean;
   privateProfile: boolean;
 }
 
@@ -41,9 +38,6 @@ export async function getPreferencesAction(): Promise<{
           viewMode: 'grid',
           showRatings: true,
           showReleaseYear: true,
-          genreAlertsEnabled: false,
-          favoriteGenres: [],
-          watchlistReminders: false,
           privateProfile: false,
         },
       };
@@ -56,9 +50,6 @@ export async function getPreferencesAction(): Promise<{
         viewMode: prefs.viewMode,
         showRatings: prefs.showRatings,
         showReleaseYear: prefs.showReleaseYear,
-        genreAlertsEnabled: prefs.genreAlertsEnabled,
-        favoriteGenres: (prefs.favoriteGenres as unknown as number[]) || null,
-        watchlistReminders: prefs.watchlistReminders,
         privateProfile: prefs.privateProfile,
       },
     };

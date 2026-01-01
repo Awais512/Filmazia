@@ -6,9 +6,8 @@ export { useRatingsStore } from '@/features/ratings';
 // UI Store remains in root as it's shared across features
 export { useUIStore } from './ui-store';
 
-// Settings and Notifications stores
+// Settings store
 export { useSettingsStore } from './settings-store';
-export { useNotificationsStore } from './notifications-store';
 
 // Re-export types
 export type { PosterQuality, ViewMode } from './settings-store';

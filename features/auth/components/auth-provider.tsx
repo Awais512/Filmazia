@@ -4,8 +4,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { getFavoritesAction } from '@/features/favorites/actions';
 import { getWatchlistAction } from '@/features/watchlist/actions';
-import { getPreferencesAction, getNotificationsAction } from '@/features/settings/actions';
-import { useFavoritesStore, useWatchlistStore, useSettingsStore, useNotificationsStore } from '@/store';
+import { getPreferencesAction } from '@/features/settings/actions';
+import { useFavoritesStore, useWatchlistStore, useSettingsStore } from '@/store';
 import { supabase } from '@/features/auth/utils/supabase-client';
 
 interface AuthContextType {
@@ -26,7 +26,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setFavoritesFromServer = useFavoritesStore((state) => state.setFromServer);
   const setWatchlistFromServer = useWatchlistStore((state) => state.setFromServer);
   const setSettingsFromServer = useSettingsStore((state) => state.setFromServer);
-  const setNotifications = useNotificationsStore((state) => state.setNotifications);
 
   useEffect(() => {
     const {
@@ -53,21 +52,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const sync = async () => {
       try {
-        const [favoritesData, watchlistData, preferencesData, notificationsData] =
+        const [favoritesData, watchlistData, preferencesData] =
           await Promise.all([
             getFavoritesAction(),
             getWatchlistAction(),
             getPreferencesAction(),
-            getNotificationsAction(),
           ]);
         if (cancelled) return;
         setFavoritesFromServer(favoritesData.items);
         setWatchlistFromServer(watchlistData);
         if (preferencesData.success && preferencesData.data) {
           setSettingsFromServer(preferencesData.data);
-        }
-        if (notificationsData.success && notificationsData.data) {
-          setNotifications(notificationsData.data);
         }
       } catch {
         return;
@@ -79,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [user, setFavoritesFromServer, setWatchlistFromServer, setSettingsFromServer, setNotifications]);
+  }, [user, setFavoritesFromServer, setWatchlistFromServer, setSettingsFromServer]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
